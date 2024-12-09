@@ -1,12 +1,12 @@
-# SpotifyDataViz
+# Projet de visualisation de données
 
-SpotifyDataViz est une application web interactive qui utilise la puissance de la bibliothèque D3.js pour créer des visualisations élégantes et intuitives à partir des données personnelles des utilisateurs Spotify. L'objectif est de présenter les statistiques et habitudes d'écoute de manière claire et attrayante.
+Ce projet est une application web interactive qui utilise la puissance de la bibliothèque D3.js pour créer des visualisations élégantes et intuitives à partir des données personnelles des utilisateurs Spotify. L'objectif est de présenter les statistiques et habitudes d'écoute de manière claire et attrayante.
 
 ---
 
 ## Fonctionnalités
 
-- **Analyse approfondie** : Explorez vos playlists, votre historique de streaming, et vos données Spotify Wrapped.
+- **Analyse approfondie** : Explorez vos playlists, vos données Spotify Wrapped...
 - **Visualisations variées** : Histogrammes, cartes de chaleur, graphiques circulaires, et bien plus pour représenter vos données.
 - **Personnalisation** : Adaptez les graphiques à vos préférences.
 - **Interactivité** : Interagissez avec les graphiques pour explorer vos données en profondeur.
@@ -16,7 +16,7 @@ SpotifyDataViz est une application web interactive qui utilise la puissance de l
 
 ## Données prises en charge
 
-Les données analysées par SpotifyDataViz incluent :
+Les données analysées incluent :
 
 - **Historique de streaming** : écoutes des 12 derniers mois.
 - **Playlists** : playlists créées ou sauvegardées.
