@@ -38,7 +38,7 @@ Les données analysées incluent :
 
 1. Clonez le dépôt :
    ```bash
-   git clone https://github.com/username/SpotifyDataViz.git
+   git clone https://github.com/heidisbk/SpotifyDataViz.git
    ```
 2. Naviguez dans le répertoire du projet :
    ```bash
