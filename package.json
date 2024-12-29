@@ -1,0 +1,16 @@
+{
+  "name": "spotifydataviz",
+  "version": "1.0.0",
+  "description": "Ce projet est une application web interactive qui utilise la puissance de la bibliothèque D3.js pour créer des visualisations élégantes et intuitives à partir des données personnelles des utilisateurs Spotify. L'objectif est de présenter les statistiques et habitudes d'écoute de manière claire et attrayante.",
+  "main": "script.js",
+  "scripts": {
+    "start": "live-server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
