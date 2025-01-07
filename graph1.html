@@ -1,0 +1,241 @@
+ <!-- Bouton pour revenir à la photo -->
+ <button onclick="window.location.href='https://codepen.io/jokwttsy-the-styleful/pen/yyBompK'">Retour à la page d'accueil</button><!DOCTYPE html>
+ <html lang="fr">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Heatmap Spotify</title>
+     <script src="https://d3js.org/d3.v7.min.js"></script>
+     <style>
+         body {
+             font-family: Arial, sans-serif;
+             margin: 20px;
+         }
+         canvas {
+             margin: 20px auto;
+             display: block;
+         }
+ 
+         #selectors {
+             margin: 20px 0;
+         }
+         select, button {
+             margin: 10px;
+             padding: 10px;
+         }
+ 
+         .controls {
+             margin: 20px 0;
+         }
+ 
+         .controls label {
+             font-size: 16px;
+             font-weight: bold;
+             margin-right: 10px;
+         }
+ 
+         #heatmap {
+             background: #fff;
+             border-radius: 8px;
+             padding: 20px;
+         }
+ 
+         .tooltip {
+             position: absolute;
+             background-color: rgba(0, 0, 0, 0.8);
+             color: #fff;
+             padding: 10px;
+             border-radius: 4px;
+             font-size: 14px;
+             pointer-events: none;
+             display: none;
+             font-family: Arial, sans-serif;
+         }
+ 
+         .axis-label text {
+             font-size: 14px;
+             fill: #333;
+         }
+ 
+         text {
+             font-family: Arial, sans-serif;
+         }
+ 
+         .title {
+             font-size: 24px;
+             font-weight: bold;
+             margin-bottom: 10px;
+             text-align: center;
+         }
+     </style>
+ </head>
+ <body>
+     <div class="controls">
+         <label for="week-select">Choisissez une semaine :</label>
+         <select id="week-select"></select>
+     </div>
+     <div class="title">Heatmap des heures d'écoute</div>
+     <div id="heatmap"></div>
+     <div class="tooltip"></div>
+ 
+     <script>
+         const files = [
+             "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/develop/Documents/dataviz/projet/Spotify_Account_Data_Clarence/StreamingHistory_music_1.json",
+             "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/develop/Documents/dataviz/projet/Spotify_Account_Data_Clarence/StreamingHistory_music_0.json"
+         ];
+ 
+         const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+         const hours = Array.from({ length: 24 }, (_, i) => i);
+ 
+         let allData = [];
+ 
+         // Charger les données
+         Promise.all(files.map(url => fetch(url).then(resp => resp.json())))
+             .then(dataArrays => {
+                 allData = dataArrays.flat();
+                 populateWeeks(allData);
+                 updateHeatmap(getDataByWeek(allData, getSelectedWeek()));
+             });
+ 
+         // Remplir le menu déroulant
+         function populateWeeks(data) {
+             const weeks = new Set(
+                 data.map(entry => {
+                     const date = new Date(entry.endTime);
+                     return getWeekYear(date);
+                 })
+             );
+ 
+             const weekSelect = d3.select("#week-select");
+             weekSelect
+                 .selectAll("option")
+                 .data([...weeks].sort())
+                 .join("option")
+                 .attr("value", d => d)
+                 .text(d => d);
+ 
+             weekSelect.on("change", () => {
+                 const selectedWeek = getSelectedWeek();
+                 const filteredData = getDataByWeek(allData, selectedWeek);
+                 updateHeatmap(filteredData);
+             });
+         }
+ 
+         function getSelectedWeek() {
+             return d3.select("#week-select").node().value;
+         }
+ 
+         function getDataByWeek(data, week) {
+             return data.filter(entry => {
+                 const date = new Date(entry.endTime);
+                 return getWeekYear(date) === week;
+             });
+         }
+ 
+         function getWeekYear(date) {
+             const year = date.getFullYear();
+             const month = date.toLocaleString("fr-FR", { month: "long" });
+             const oneJan = new Date(year, 0, 1);
+             const dayOfYear = ((date - oneJan + 86400000) / 86400000);
+             const week = Math.ceil(dayOfYear / 7);
+             return `${year}-W${week.toString().padStart(2, "0")} (${month})`;
+         }
+ 
+         function aggregateData(data) {
+             const aggregated = {};
+             data.forEach(entry => {
+                 const date = new Date(entry.endTime);
+                 const day = days[date.getDay() - 1]; // Dimanche est 0
+                 const hour = date.getHours();
+                 const key = `${day}-${hour}`;
+ 
+                 if (!aggregated[key]) {
+                     aggregated[key] = 0;
+                 }
+                 aggregated[key] += entry.msPlayed;
+             });
+ 
+             return days.flatMap(day =>
+                 hours.map(hour => {
+                     const key = `${day}-${hour}`;
+                     return {
+                         day,
+                         hour,
+                         value: aggregated[key] || 0
+                     };
+                 })
+             );
+         }
+ 
+         function updateHeatmap(data) {
+             const aggregatedData = aggregateData(data);
+ 
+             const margin = { top: 50, right: 20, bottom: 50, left: 150 };
+             const width = 800 - margin.left - margin.right;
+             const height = 400 - margin.top - margin.bottom;
+ 
+             d3.select("#heatmap").selectAll("*").remove();
+ 
+             const svg = d3.select("#heatmap")
+                 .append("svg")
+                 .attr("width", width + margin.left + margin.right)
+                 .attr("height", height + margin.top + margin.bottom)
+                 .append("g")
+                 .attr("transform", `translate(${margin.left}, ${margin.top})`);
+ 
+             const xScale = d3.scaleBand()
+                 .domain(hours)
+                 .range([0, width])
+                 .padding(0.05);
+ 
+             const yScale = d3.scaleBand()
+                 .domain(days)
+                 .range([0, height])
+                 .padding(0.05);
+ 
+             const colorScale = d3.scaleSequential(d3.interpolateBlues)
+                 .domain([0, d3.max(aggregatedData, d => d.value)]);
+ 
+             const tooltip = d3.select(".tooltip");
+ 
+             svg.selectAll("rect")
+                 .data(aggregatedData)
+                 .join("rect")
+                 .attr("x", d => xScale(d.hour))
+                 .attr("y", d => yScale(d.day))
+                 .attr("width", xScale.bandwidth() - 5)
+                 .attr("height", yScale.bandwidth() - 5)
+                 .attr("fill", d => colorScale(d.value))
+                 .on("mouseover", (event, d) => {
+                     const totalSeconds = Math.floor(d.value / 1000);
+                     const hours = Math.floor(totalSeconds / 3600);
+                     const minutes = Math.floor((totalSeconds % 3600) / 60);
+                     const seconds = totalSeconds % 60;
+ 
+                     tooltip
+                         .style("display", "block")
+                         .style("left", event.pageX + 10 + "px")
+                         .style("top", event.pageY - 10 + "px")
+                         .html(`
+                             <strong>Jour :</strong> ${d.day}<br>
+                             <strong>Heure :</strong> ${d.hour}:00<br>
+                             <strong>Temps d'écoute :</strong> ${hours}h ${minutes}m ${seconds}s
+                         `);
+                 })
+                 .on("mouseout", () => tooltip.style("display", "none"));
+ 
+             svg.append("g")
+                 .attr("class", "x-axis")
+                 .attr("transform", `translate(0,${height})`)
+                 .call(d3.axisBottom(xScale));
+ 
+             svg.append("g")
+                 .attr("class", "y-axis")
+                 .call(d3.axisLeft(yScale));
+         }
+ 
+         function getMonth(d) {
+             const date = new Date(d.endTime);
+             return date.toLocaleString("fr-FR", { month: "long" });
+         }
+     </script>

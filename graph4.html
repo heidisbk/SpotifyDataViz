@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Top Tracks by Period</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    canvas {
+      margin: 20px auto;
+      display: block;
+    }
+    #selectors {
+      margin: 20px 0;
+    }
+    select, button {
+      margin: 10px;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Spotify Top 10 Tracks by Period</h1>
+  
+  <div id="selectors">
+    <select id="periodSelector">
+      <option value="daily">Select a day</option>
+      <option value="weekly">Select a week</option>
+      <option value="monthly">Select a month</option>
+    </select>
+    <select id="dateSelector">
+      <option value="">Select a period</option>
+    </select>
+    <button onclick="updateChart()">Update Chart</button>
+  </div>
+
+  <canvas id="chartCanvas" width="600" height="400"></canvas>
+
+  <script>
+    const dataUrls = [
+      "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/develop/Documents/dataviz/projet/Spotify_Account_Data_Clarence/StreamingHistory_music_1.json",
+      "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/develop/Documents/dataviz/projet/Spotify_Account_Data_Clarence/StreamingHistory_music_0.json"
+    ];
+
+    let rawData = [];
+    let groupedData = {
+      daily: {},
+      weekly: {},
+      monthly: {}
+    };
+    let chartInstance;
+
+    // Fetch data and initialize
+    Promise.all(dataUrls.map(url => fetch(url).then(response => response.json())))
+      .then(responses => {
+        rawData = responses.flat();
+        processData();
+        populatePeriodSelector();
+      })
+      .catch(err => {
+        console.error("Error loading data:", err);
+        alert("Failed to load data. Please check the console for more details.");
+      });
+
+    // Process data into daily, weekly, and monthly groups
+    function processData() {
+      rawData.forEach(entry => {
+        const track = entry.trackName;
+        const msPlayed = entry.msPlayed;
+        const date = new Date(entry.endTime);
+        const day = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        const week = `${date.getFullYear()}-W${getWeek(date)}`; // YYYY-W##
+        const month = `${date.getFullYear()}-${date.getMonth() + 1}`; // YYYY-MM
+
+        // Group by day
+        if (!groupedData.daily[day]) groupedData.daily[day] = {};
+        if (!groupedData.daily[day][track]) groupedData.daily[day][track] = 0;
+        groupedData.daily[day][track] += msPlayed;
+
+        // Group by week
+        if (!groupedData.weekly[week]) groupedData.weekly[week] = {};
+        if (!groupedData.weekly[week][track]) groupedData.weekly[week][track] = 0;
+        groupedData.weekly[week][track] += msPlayed;
+
+        // Group by month
+        if (!groupedData.monthly[month]) groupedData.monthly[month] = {};
+        if (!groupedData.monthly[month][track]) groupedData.monthly[month][track] = 0;
+        groupedData.monthly[month][track] += msPlayed;
+      });
+    }
+
+    // Helper function to get ISO week number
+    function getWeek(date) {
+      const firstJan = new Date(date.getFullYear(), 0, 1);
+      const dayOfYear = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
+      return Math.ceil((dayOfYear + firstJan.getDay() + 1) / 7);
+    }
+
+    // Populate the period selector
+    function populatePeriodSelector() {
+      const periodSelector = document.getElementById('periodSelector');
+      const dateSelector = document.getElementById('dateSelector');
+      
+      periodSelector.addEventListener('change', function() {
+        const period = periodSelector.value;
+        dateSelector.innerHTML = '<option value="">Select a period</option>'; // Clear options
+
+        if (groupedData[period]) {
+          Object.keys(groupedData[period]).sort().forEach(periodKey => {
+            const option = document.createElement('option');
+            option.value = periodKey;
+            option.textContent = periodKey;
+            dateSelector.appendChild(option);
+          });
+        }
+      });
+
+      // Initial population for the daily period
+      periodSelector.dispatchEvent(new Event('change'));
+    }
+
+    // Update the chart for the selected period
+    function updateChart() {
+      const periodSelector = document.getElementById('periodSelector');
+      const dateSelector = document.getElementById('dateSelector');
+      const selectedPeriod = periodSelector.value;
+      const selectedPeriodKey = dateSelector.value;
+
+      if (!selectedPeriod || !selectedPeriodKey || !groupedData[selectedPeriod][selectedPeriodKey]) {
+        alert("Please select a valid period.");
+        return;
+      }
+
+      const trackData = groupedData[selectedPeriod][selectedPeriodKey];
+      const topTracks = Object.entries(trackData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+      const labels = topTracks.map(item => item[0]);
+      const data = topTracks.map(item => (item[1] / (1000 * 60 * 60)).toFixed(2)); // Convert ms to hours
+
+      renderChart(labels, data, selectedPeriodKey);
+    }
+
+    // Render the chart
+    function renderChart(labels, data, period) {
+      const ctx = document.getElementById('chartCanvas').getContext('2d');
+
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: `Top 10 Tracks in ${period}`,
+            data,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Listening Time (Hours)'
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(tooltipItem) {
+                  return `${tooltipItem.label}: ${tooltipItem.raw} hours`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Top Genres by Period</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    canvas {
+      margin: 20px auto;
+      display: block;
+    }
+    #selectors {
+      margin: 20px 0;
+    }
+    select, button {
+      margin: 10px;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Spotify Top 10 Genres by Period</h1>
+  
+  <div id="selectors">
+    <select id="periodSelector">
+      <option value="daily">Select a day</option>
+      <option value="weekly">Select a week</option>
+      <option value="monthly">Select a month</option>
+    </select>
+    <select id="dateSelector">
+      <option value="">Select a period</option>
+    </select>
+    <button onclick="updateChart()">Update Chart</button>
+  </div>
+
+  <canvas id="chartCanvas" width="600" height="400"></canvas>
+
+  <script>
+    const dataUrls = [
+      "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/develop/Documents/dataviz/projet/Spotify_Account_Data_Clarence/StreamingHistory_music_1.json",
+      "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/develop/Documents/dataviz/projet/Spotify_Account_Data_Clarence/StreamingHistory_music_0.json"
+    ];
+
+    let rawData = [];
+    let groupedData = {
+      daily: {},
+      weekly: {},
+      monthly: {}
+    };
+    let chartInstance;
+
+    // Fetch data and initialize
+    Promise.all(dataUrls.map(url => fetch(url).then(response => response.json()))).then(responses => {
+        rawData = responses.flat();
+        processData();
+        populatePeriodSelector();
+      })
+      .catch(err => {
+        console.error("Error loading data:", err);
+        alert("Failed to load data. Please check the console for more details.");
+      });
+
+    // Process data into daily, weekly, and monthly groups
+    function processData() {
+      rawData.forEach(entry => {
+        const genre = entry.artistName; // Assuming genre information is stored under artistName
+        const msPlayed = entry.msPlayed;
+        const date = new Date(entry.endTime);
+        const day = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        const week = `${date.getFullYear()}-W${getWeek(date)}`; // YYYY-W##
+        const month = `${date.getFullYear()}-${date.getMonth() + 1}`; // YYYY-MM
+
+        // Group by day
+        if (!groupedData.daily[day]) groupedData.daily[day] = {};
+        if (!groupedData.daily[day][genre]) groupedData.daily[day][genre] = 0;
+        groupedData.daily[day][genre] += msPlayed;
+
+        // Group by week
+        if (!groupedData.weekly[week]) groupedData.weekly[week] = {};
+        if (!groupedData.weekly[week][genre]) groupedData.weekly[week][genre] = 0;
+        groupedData.weekly[week][genre] += msPlayed;
+
+        // Group by month
+        if (!groupedData.monthly[month]) groupedData.monthly[month] = {};
+        if (!groupedData.monthly[month][genre]) groupedData.monthly[month][genre] = 0;
+        groupedData.monthly[month][genre] += msPlayed;
+      });
+    }
+
+    // Helper function to get ISO week number
+    function getWeek(date) {
+      const firstJan = new Date(date.getFullYear(), 0, 1);
+      const dayOfYear = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
+      return Math.ceil((dayOfYear + firstJan.getDay() + 1) / 7);
+    }
+
+    // Populate the period selector
+    function populatePeriodSelector() {
+      const periodSelector = document.getElementById('periodSelector');
+      const dateSelector = document.getElementById('dateSelector');
+      
+      periodSelector.addEventListener('change', function() {
+        const period = periodSelector.value;
+        dateSelector.innerHTML = '<option value="">Select a period</option>'; // Clear options
+
+        if (groupedData[period]) {
+          Object.keys(groupedData[period]).sort().forEach(periodKey => {
+            const option = document.createElement('option');
+            option.value = periodKey;
+            option.textContent = periodKey;
+            dateSelector.appendChild(option);
+          });
+        }
+      });
+
+      // Initial population for the daily period
+      periodSelector.dispatchEvent(new Event('change'));
+    }
+
+    // Update the chart for the selected period
+    function updateChart() {
+      const periodSelector = document.getElementById('periodSelector');
+      const dateSelector = document.getElementById('dateSelector');
+      const selectedPeriod = periodSelector.value;
+      const selectedPeriodKey = dateSelector.value;
+
+      if (!selectedPeriod || !selectedPeriodKey || !groupedData[selectedPeriod][selectedPeriodKey]) {
+        alert("Please select a valid period.");
+        return;
+      }
+
+      const genreData = groupedData[selectedPeriod][selectedPeriodKey];
+      const topGenres = Object.entries(genreData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+      const labels = topGenres.map(item => item[0]);
+      const data = topGenres.map(item => (item[1] / (1000 * 60 * 60)).toFixed(2)); // Convert ms to hours
+
+      renderChart(labels, data, selectedPeriodKey);
+    }
+
+    // Render the chart
+    function renderChart(labels, data, period) {
+      const ctx = document.getElementById('chartCanvas').getContext('2d');
+
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: `Top 10 Genres in ${period}`,
+            data,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Listening Time (Hours)'
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(tooltipItem) {
+                  return `${tooltipItem.label}: ${tooltipItem.raw} hours`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
