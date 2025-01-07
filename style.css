@@ -4,6 +4,15 @@ body {
     padding: 0;
     background-color: #f9f9f9;
 }
+h1 {
+    text-align: center;
+}
+#vinyle-image {
+    display: block;       /* Pour permettre le centrage avec margin */
+    margin: 20px auto;    /* Centre horizontalement et ajoute un espace vertical */
+    max-width: 100%;      /* Empêche l'image de dépasser la largeur de son conteneur */
+    height: auto;         /* Conserve les proportions de l'image */
+}
 #app {
     padding: 20px;
 }
