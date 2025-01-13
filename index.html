@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,8 +11,20 @@
         <h1>Spotify Data Visualization</h1>
         <img src="assets/images/vinyle.jpg" alt="Vinyl Covers" id="vinyle-image">
         <div class="vinyl-button" style="top: 42%; left: 30%; width: 10%; height: 10%;" data-graph="graph2"
- onclick="window.location.href='https://codepen.io/jokwttsy-the-styleful/pen/ByBwXJK'" target="_blank">Graphe 2</div>
+            onclick="window.location.href='https://codepen.io/jokwttsy-the-styleful/pen/ByBwXJK'" target="_blank">Graphe 2</div>
         <div id="chart"></div>
+        
+        <!-- Bouton de connexion Spotify -->
+        <div id="login-section">
+            <button id="login-button">Se Connecter avec Spotify</button>
+        </div>
+        
+        <!-- Section pour afficher les top 5 chansons -->
+        <div id="tracks-section" style="display: none;">
+            <h2>Mes 5 Chansons Préférées</h2>
+            <ul id="top-tracks-list"></ul>
+            <button id="logout-button">Se Déconnecter</button>
+        </div>
     </div>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="script.js"></script>

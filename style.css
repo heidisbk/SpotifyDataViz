@@ -1,20 +1,22 @@
+/* style.css */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f9f9f9;
 }
-h1 {
+h1, h2 {
     text-align: center;
 }
 #vinyle-image {
-    display: block;       /* Pour permettre le centrage avec margin */
-    margin: 20px auto;    /* Centre horizontalement et ajoute un espace vertical */
-    max-width: 100%;      /* Empêche l'image de dépasser la largeur de son conteneur */
-    height: auto;         /* Conserve les proportions de l'image */
+    display: block;
+    margin: 20px auto;
+    max-width: 100%;
+    height: auto;
 }
 #app {
     padding: 20px;
+    position: relative;
 }
 #chart {
     margin: 20px auto;
@@ -22,4 +24,76 @@ h1 {
     height: 400px;
     border: 1px solid #ccc;
     background: #fff;
+}
+.vinyl-button {
+    position: absolute;
+    /* Styles personnalisés pour le bouton */
+    background-color: #1DB954;
+    color: white;
+    text-align: center;
+    line-height: normal;
+    cursor: pointer;
+    border-radius: 5px;
+    padding: 10px;
+    text-decoration: none;
+}
+#login-section {
+    text-align: center;
+    margin-top: 20px;
+}
+#login-button {
+    padding: 10px 20px;
+    background-color: #1DB954;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+}
+#login-button:hover {
+    background-color: #1ed760;
+}
+#tracks-section {
+    width: 80%;
+    margin: 20px auto;
+}
+#top-tracks-list {
+    list-style-type: none;
+    padding: 0;
+}
+#top-tracks-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    background: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+#top-tracks-list img {
+    margin-right: 15px;
+    border-radius: 5px;
+}
+#top-tracks-list a {
+    text-decoration: none;
+    color: #000;
+    display: flex;
+    align-items: center;
+}
+#top-tracks-list a:hover {
+    text-decoration: underline;
+}
+#logout-button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+}
+#logout-button:hover {
+    background-color: #c0392b;
 }
