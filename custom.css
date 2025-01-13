@@ -1,0 +1,125 @@
+/* custom.css */
+
+/* Palette de couleurs Spotify */
+:root {
+    --spotify-green: #1DB954;
+    --spotify-dark: #191414;
+    --spotify-light: #FFFFFF;
+    --spotify-grey: #B3B3B3;
+    --navbar-bg: #242424;
+}
+
+/* Réinitialisation sélective des marges et paddings */
+body, h1, h2, h3, h4, h5, h6, p, ul, li, a, img, button {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--spotify-dark);
+    color: var(--spotify-light);
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Styles de la Barre de Navigation */
+.navbar-custom {
+    background-color: var(--navbar-bg);
+    z-index: 1030; /* S'assurer que la navbar reste au-dessus des autres éléments */
+}
+
+/* Titres */
+h2 {
+    font-size: 2rem;
+    color: var(--spotify-green);
+    margin-bottom: 20px;
+}
+
+/* Image de Vinyle */
+#vinyle-image {
+    max-width: 300px;
+    height: auto;
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Boutons */
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+#login-button {
+    background-color: var(--spotify-green);
+    color: var(--spotify-dark);
+}
+
+#login-button:hover {
+    background-color: #1ed760;
+    transform: scale(1.05);
+}
+
+#logout-button {
+    background-color: #e74c3c;
+    color: var(--spotify-light);
+}
+
+#logout-button:hover {
+    background-color: #c0392b;
+    transform: scale(1.05);
+}
+
+/* Liste des Top Tracks */
+#top-tracks-list {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#top-tracks-list .list-group-item {
+    background-color: var(--spotify-dark);
+    border: 1px solid var(--spotify-grey);
+    color: var(--spotify-light);
+    display: flex;
+    align-items: center;
+}
+
+#top-tracks-list .list-group-item:hover {
+    background-color: var(--spotify-grey);
+    color: var(--spotify-dark);
+}
+
+#top-tracks-list img {
+    width: 50px;
+    height: 50px;
+    margin-right: 15px;
+    border-radius: 5px;
+}
+
+/* Graphes D3.js */
+.graph-container {
+    background-color: var(--spotify-dark);
+    border: 2px solid var(--spotify-green);
+    border-radius: 10px;
+    padding: 10px;
+    height: 300px; /* Ajustez la hauteur selon vos besoins */
+}
+
+.graph-container svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Responsivité des Images */
+@media (max-width: 768px) {
+    #vinyle-image {
+        max-width: 200px;
+    }
+
+    .graph-container {
+        height: 200px;
+    }
+}

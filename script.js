@@ -1,6 +1,6 @@
 // script.js
 
-// Configuration Spotify (Seulement CLIENT_ID est utilisé ici)
+// Configuration Spotify
 const CLIENT_ID = '2a0f07a819f94f008a0d950fb8ea84ca'; // Remplacez par votre Client ID exact
 const REDIRECT_URI = 'http://127.0.0.1:8080/'; // Doit correspondre exactement
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
@@ -13,14 +13,13 @@ const SCOPES = [
 
 // Fonction pour obtenir le token d'accès depuis l'URL
 function getTokenFromUrl() {
-    return window.location.hash
-        .substring(1)
-        .split('&')
-        .reduce((initial, item) => {
-            const parts = item.split('=');
-            initial[parts[0]] = decodeURIComponent(parts[1]);
-            return initial;
-        }, {});
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    return {
+        access_token: params.get('access_token'),
+        token_type: params.get('token_type'),
+        expires_in: params.get('expires_in')
+    };
 }
 
 // Fonction pour afficher les top 5 tracks
@@ -51,11 +50,14 @@ async function displayTopTracks(token) {
 
         topTracks.forEach(track => {
             const listItem = document.createElement('li');
+            listItem.classList.add('list-group-item');
             listItem.innerHTML = `
-                <a href="${track.url}" target="_blank">
-                    <img src="${track.cover}" alt="Cover" width="50" height="50">
-                    <strong>${track.name}</strong> par ${track.artist} (Popularité: ${track.popularity})
-                </a>
+                <img src="${track.cover}" alt="Cover">
+                <div>
+                    <a href="${track.url}" target="_blank" class="text-success text-decoration-none"><strong>${track.name}</strong></a>
+                    <p>par ${track.artist}</p>
+                    <p>Popularité: ${track.popularity}</p>
+                </div>
             `;
             topTracksList.appendChild(listItem);
         });
@@ -78,6 +80,34 @@ function logout() {
     // Afficher le bouton de login et masquer les tracks
     document.getElementById('login-section').style.display = 'block';
     document.getElementById('tracks-section').style.display = 'none';
+}
+
+// Fonction pour créer un cercle avec D3.js
+function createCircleGraph(graphId) {
+    const svg = d3.select(`#${graphId}`)
+        .append("svg")
+        .attr("width", "100%")
+        .attr("height", "100%");
+
+    const circle = svg.append("circle")
+        .attr("cx", 50)
+        .attr("cy", 50)
+        .attr("r", 30)
+        .attr("fill", "var(--spotify-green)");
+
+    // Animation simple avec D3.js
+    circle.transition()
+        .duration(2000)
+        .attr("cx", 150)
+        .attr("cy", 50)
+        .attr("r", 50)
+        .attr("fill", "#1ed760")
+        .transition()
+        .duration(2000)
+        .attr("cx", 50)
+        .attr("cy", 50)
+        .attr("r", 30)
+        .attr("fill", "var(--spotify-green)");
 }
 
 // Initialisation après le chargement du DOM
@@ -104,19 +134,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Ajouter l'événement de clic au bouton de logout
-    document.getElementById('logout-button').addEventListener('click', () => {
-        logout();
-    });
+    document.getElementById('logout-button').addEventListener('click', logout);
 
-    // Exemple : Créer un cercle avec D3.js
-    const svg = d3.select("#chart")
-        .append("svg")
-        .attr("width", 800)
-        .attr("height", 400);
-
-    svg.append("circle")
-        .attr("cx", 100)
-        .attr("cy", 100)
-        .attr("r", 50)
-        .attr("fill", "blue");
+    // Créer 5 cercles pour les graphes D3.js
+    for (let i = 1; i <= 5; i++) {
+        createCircleGraph(`graph${i}`);
+    }
 });

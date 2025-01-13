@@ -3,30 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpotifyDataViz</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Data Visualization</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-9ndCyUa6mYVn0sI04mQZzF0eVJY9IetFq5e1tBOA6LgG3sbVHjm6Xa8m3dGqK4BX"
+      crossorigin="anonymous"
+    >
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="custom.css">
 </head>
 <body>
-    <div id="app">
-        <h1>Spotify Data Visualization</h1>
-        <img src="assets/images/vinyle.jpg" alt="Vinyl Covers" id="vinyle-image">
-        <div class="vinyl-button" style="top: 42%; left: 30%; width: 10%; height: 10%;" data-graph="graph2"
-            onclick="window.location.href='https://codepen.io/jokwttsy-the-styleful/pen/ByBwXJK'" target="_blank">Graphe 2</div>
-        <div id="chart"></div>
-        
-        <!-- Bouton de connexion Spotify -->
-        <div id="login-section">
-            <button id="login-button">Se Connecter avec Spotify</button>
+    <!-- Barre de Navigation Fixe avec Classe Personnalisée -->
+    <nav class="navbar navbar-dark navbar-custom fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="assets/images/Spotify_Full_Logo_RGB_Green.png" alt="Spotify Logo" height="40" class="me-2">
+            </a>
         </div>
-        
-        <!-- Section pour afficher les top 5 chansons -->
-        <div id="tracks-section" style="display: none;">
+    </nav>
+
+    <!-- Contenu Principal -->
+    <div class="container mt-5 pt-4 text-center">
+        <!-- Image de Vinyle -->
+        <img src="assets/images/vinyle.jpg" alt="Vinyl Covers" id="vinyle-image" class="img-fluid my-4 mx-auto d-block">
+
+        <!-- Section des Graphes -->
+        <div class="row g-4 my-4">
+            <!-- Répéter ce bloc pour chaque graphe -->
+            <div class="col-md-4">
+                <div id="graph1" class="graph-container"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="graph2" class="graph-container"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="graph3" class="graph-container"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="graph4" class="graph-container"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="graph5" class="graph-container"></div>
+            </div>
+        </div>
+
+        <!-- Liste des Top 5 Chansons Préférées -->
+        <div id="tracks-section" class="my-4" style="display: none;">
             <h2>Mes 5 Chansons Préférées</h2>
-            <ul id="top-tracks-list"></ul>
-            <button id="logout-button">Se Déconnecter</button>
+            <ul id="top-tracks-list" class="list-group my-3"></ul>
+            <button id="logout-button" class="btn btn-danger btn-lg mt-3">Se Déconnecter</button>
+        </div>
+
+        <!-- Bouton de Connexion Spotify -->
+        <div id="login-section" class="my-4">
+            <button id="login-button" class="btn btn-success btn-lg">Se Connecter avec Spotify</button>
         </div>
     </div>
+
+    <!-- Bootstrap JS Bundle (Inclut Popper) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ENjdO4Dr2bkBIFxQpeoFZrLl5/JqA4v1Lg/HIJKjrUyOn1Ai0Gyu6ER3fW/jkN6N"
+      crossorigin="anonymous"
+    ></script>
+    <!-- D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Script Personnalisé -->
     <script src="script.js"></script>
 </body>
 </html>
