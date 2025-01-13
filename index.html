@@ -23,6 +23,15 @@
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <img src="assets/images/Spotify_Full_Logo_RGB_Green.png" alt="Spotify Logo" height="40" class="me-2">
             </a>
+            <!-- Menu Utilisateur -->
+            <div class="d-flex align-items-center">
+                <select id="user-select" class="form-select me-2" aria-label="Sélectionner un utilisateur">
+                    <option value="" disabled selected>Choisir un utilisateur</option>
+                    <!-- Les options seront ajoutées dynamiquement -->
+                </select>
+                <button id="add-user-button" class="btn btn-primary">Ajouter Utilisateur</button>
+                <button id="logout-button" class="btn btn-danger btn-lg ms-2 d-none">Se Déconnecter</button>
+            </div>
         </div>
     </nav>
 
@@ -33,29 +42,27 @@
 
         <!-- Section des Graphes -->
         <div class="row g-4 my-4">
-            <!-- Répéter ce bloc pour chaque graphe -->
+            <!-- Graph1 -->
             <div class="col-md-4">
                 <div id="graph1" class="graph-container"></div>
             </div>
-            <div class="col-md-4">
-                <div id="graph2" class="graph-container"></div>
+            <!-- Graphique des Genres -->
+            <div class="col-12">
+                <h2>Genres Musicaux</h2>
+                <div id="genre-bubble-chart" class="graph-container"></div>
             </div>
+            <!-- Graph3 -->
             <div class="col-md-4">
                 <div id="graph3" class="graph-container"></div>
             </div>
+            <!-- Graph4 -->
             <div class="col-md-4">
                 <div id="graph4" class="graph-container"></div>
             </div>
+            <!-- Graph5 -->
             <div class="col-md-4">
                 <div id="graph5" class="graph-container"></div>
             </div>
-        </div>
-
-        <!-- Liste des Top 5 Chansons Préférées -->
-        <div id="tracks-section" class="my-4" style="display: none;">
-            <h2>Mes 5 Chansons Préférées</h2>
-            <ul id="top-tracks-list" class="list-group my-3"></ul>
-            <button id="logout-button" class="btn btn-danger btn-lg mt-3">Se Déconnecter</button>
         </div>
 
         <!-- Bouton de Connexion Spotify -->

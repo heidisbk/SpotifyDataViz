@@ -10,7 +10,7 @@
 }
 
 /* Réinitialisation sélective des marges et paddings */
-body, h1, h2, h3, h4, h5, h6, p, ul, li, a, img, button {
+body, h1, h2, h3, h4, h5, h6, p, ul, li, a, img, button, select {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -32,7 +32,8 @@ body {
 h2 {
     font-size: 2rem;
     color: var(--spotify-green);
-    margin-bottom: 20px;
+    margin-top: 100px;
+    margin-bottom: 10px;
 }
 
 /* Image de Vinyle */
@@ -73,32 +74,6 @@ button {
     transform: scale(1.05);
 }
 
-/* Liste des Top Tracks */
-#top-tracks-list {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-#top-tracks-list .list-group-item {
-    background-color: var(--spotify-dark);
-    border: 1px solid var(--spotify-grey);
-    color: var(--spotify-light);
-    display: flex;
-    align-items: center;
-}
-
-#top-tracks-list .list-group-item:hover {
-    background-color: var(--spotify-grey);
-    color: var(--spotify-dark);
-}
-
-#top-tracks-list img {
-    width: 50px;
-    height: 50px;
-    margin-right: 15px;
-    border-radius: 5px;
-}
-
 /* Graphes D3.js */
 .graph-container {
     background-color: var(--spotify-dark);
@@ -122,4 +97,41 @@ button {
     .graph-container {
         height: 200px;
     }
+}
+
+/* Tooltip */
+.tooltip {
+    position: absolute;
+    text-align: center;
+    width: 120px;
+    height: 50px;
+    padding: 5px;
+    font: 12px sans-serif;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+}
+
+/* Ajuster la hauteur du conteneur du Bubble Chart */
+#genre-bubble-chart {
+    height: 600px; /* Ajustez selon vos besoins */
+}
+
+/* Styles pour le Menu Utilisateur */
+#user-select {
+    width: 200px;
+    margin-right: 10px;
+}
+
+#add-user-button {
+    background-color: #1DB954;
+    color: #fff;
+}
+
+#add-user-button:hover {
+    background-color: #1ed760;
+    transform: scale(1.05);
 }
