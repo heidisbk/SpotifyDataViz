@@ -1024,3 +1024,312 @@ function formatDuration(ms) {
 
     return `${hours % 24}h ${minutes % 60}m ${seconds % 60}s`;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let currentDataSet = "Clarence"; // Default dataset
+    let rawData = [];
+    let groupedData = { daily: {}, weekly: {}, monthly: {} };
+    let chartInstance, radarInstance;
+
+document.getElementById('clarenceButton').addEventListener('click', () => loadData("Clarence"));
+document.getElementById('heidiButton').addEventListener('click', () => loadData("Heidi"));
+
+
+        let allData = [];
+        const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+        const weeks = Array.from({ length: 5 }, (_, i) => `Semaine ${i + 1}`);
+        const hours = Array.from({ length: 24 }, (_, i) => i);
+
+        const tooltip = d3.select(".tooltip");
+        const heatmapContainer = d3.select("#heatmap");
+
+      
+      
+async function loadData(user) {
+    try {
+        const files = dataSources[user]; // Obtenir les fichiers pour l'utilisateur
+        const dataArrays = await Promise.all(files.map(url => fetch(url).then(resp => resp.json())));
+        allData = dataArrays.flat();
+        console.log("Données chargées :", allData);
+        initVisualization();
+        populateMonths(allData);
+        const selectedMonth = getSelectedMonth();
+        if (selectedMonth) {
+            const filteredData = getDataByMonth(allData, selectedMonth);
+            updateHeatmap(filteredData, selectedMonth);
+        }
+    } catch (error) {
+        console.error("Erreur de chargement des données :", error);
+    }
+}
+
+      
+      
+        // Initialisation de la visualisation
+        function initVisualization() {
+            const select = d3.select("#visualization-type");
+            select.on("change", () => updateHeatmap(select.node().value));
+
+            // Charger la première visualisation par défaut
+            select.dispatch("change");
+        }
+
+       function updateHeatmap(data, selectedMonth) {
+    const type = d3.select("#visualization-type").node().value;
+
+    heatmapContainer.html(''); // Vider la heatmap existante
+
+    if (type === "monthly") {
+        // Agréger les données par mois (statique)
+        const aggregatedData = aggregateDataByMonthAverage(data);
+        createMonthlyHeatmap(aggregatedData);
+    } else if (type === "weekly") {
+        // Filtrer les données pour le mois sélectionné, puis agréger par semaine
+        const filteredData = getDataByMonth(data, selectedMonth);
+        const aggregatedData = aggregateWeeklyData(filteredData);
+        createWeeklyHeatmap(aggregatedData, selectedMonth);
+    } else if (type === "daily") {
+        // Filtrer les données pour le mois sélectionné, puis agréger par jour et heure
+        const filteredData = getDataByMonth(data, selectedMonth);
+        const aggregatedData = aggregateDailyData(filteredData);
+        createDailyHeatmap(aggregatedData, selectedMonth);
+    }
+}
+
+        // Remplir la liste des mois
+        function populateMonths(data) {
+            const months = new Set(
+                data.map(entry => new Date(entry.endTime).toISOString().slice(0, 7)) // YYYY-MM format
+            );
+
+            const monthSelect = d3.select("#month-select");
+            monthSelect
+                .selectAll("option")
+                .data([...months].sort())
+                .join("option")
+                .attr("value", d => d)
+                .text(d => d);
+
+            monthSelect.on("change", () => {
+                const selectedMonth = getSelectedMonth();
+                const filteredData = getDataByMonth(allData, selectedMonth);
+                updateHeatmap(filteredData, selectedMonth);
+            });
+        }
+
+        // Récupérer le mois sélectionné
+        function getSelectedMonth() {
+            return d3.select("#month-select").node().value;
+        }
+
+        // Filtrer les données par mois
+        function getDataByMonth(data, month) {
+            return data.filter(entry => new Date(entry.endTime).toISOString().slice(0, 7) === month);
+        }
+
+        // Agréger les données par jour et heure
+        function aggregateDailyData(data) {
+            const aggregated = {};
+            data.forEach(entry => {
+                const date = new Date(entry.endTime);
+                const day = date.getDay(); // 0 = Dimanche → 6 = Samedi
+                const hour = date.getHours(); // Heure de la journée
+                const key = `${day}-${hour}`;
+
+                if (!aggregated[key]) {
+                    aggregated[key] = 0;
+                }
+                aggregated[key] += entry.msPlayed;
+            });
+
+            return days.map((day, dIndex) =>
+                hours.map(hour => ({
+                    day,
+                    hour,
+                    value: aggregated[`${dIndex}-${hour}`] || 0
+                }))
+            ).flat();
+        }
+
+        // Créer la heatmap quotidienne
+        function createDailyHeatmap(data, selectedMonth) {
+            createHeatmap(data, hours, days, (d) => ({
+                x: d.hour,
+                y: d.day,
+                value: d.value
+            }));
+        }
+
+        // Agréger les données par semaine
+        function aggregateWeeklyData(data) {
+            const aggregated = {};
+            data.forEach(entry => {
+                const date = new Date(entry.endTime);
+                const week = Math.floor((date.getDate() - 1) / 7); // 0-based week index
+                const day = date.getDay() === 0 ? 6 : date.getDay() - 1; // 0 = Dimanche → 6
+                const key = `${week}-${day}`;
+
+                if (!aggregated[key]) {
+                    aggregated[key] = 0;
+                }
+                aggregated[key] += entry.msPlayed;
+            });
+
+            return weeks.flatMap((week, wIndex) =>
+                days.map((day, dIndex) => ({
+                    week,
+                    day,
+                    value: aggregated[`${wIndex}-${dIndex}`] || 0
+                }))
+            );
+        }
+
+        // Créer la heatmap hebdomadaire
+        function createWeeklyHeatmap(data, selectedMonth) {
+            createHeatmap(data, weeks, days, (d) => ({
+                x: d.week,
+                y: d.day,
+                value: d.value
+            }));
+        }
+
+      
+         function aggregateDataByMonthAverage(data) {
+            const aggregated = {};
+            data.forEach(entry => {
+                const date = new Date(entry.endTime);
+                const month = date.toISOString().slice(0, 7); // Format YYYY-MM
+                if (!aggregated[month]) {
+                    aggregated[month] = { totalMs: 0, dayCount: new Set() };
+                }
+                aggregated[month].totalMs += entry.msPlayed;
+                aggregated[month].dayCount.add(date.getDate());
+            });
+            return Object.entries(aggregated).map(([month, { totalMs, dayCount }]) => ({
+                month,
+                averageMs: totalMs / dayCount.size
+            }));
+                      // Charger la première visualisation par défaut
+            select.dispatch("change");
+        }    
+      
+// Créer la heatmap mensuelle
+function createMonthlyHeatmap(data) {
+    const margin = { top: 50, right: 20, bottom: 50, left: 100 };
+    const width = 900 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    heatmapContainer.selectAll("*").remove(); // Vider la heatmap existante
+
+    const svg = heatmapContainer.append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    const xScale = d3.scaleBand()
+        .domain(data.map(d => d.month)) // Utiliser tous les mois
+        .range([0, width])
+        .padding(0.05);
+
+    const colorScale = d3.scaleSequential(d3.interpolateBlues)
+        .domain([0, d3.max(data, d => d.averageMs)]); // Définir l'échelle de couleurs
+
+    // Créer les rectangles pour la heatmap
+    svg.selectAll("rect")
+        .data(data)
+        .join("rect")
+        .attr("x", d => xScale(d.month))
+        .attr("y", 0)
+        .attr("width", xScale.bandwidth())
+        .attr("height", height / 2)
+        .attr("fill", d => colorScale(d.averageMs)) // Appliquer la couleur en fonction de la moyenne
+        .on("mouseover", (event, d) => {
+            tooltip.style("display", "block")
+                .style("left", event.pageX + 10 + "px")
+                .style("top", event.pageY - 10 + "px")
+                .html(`Mois : ${d.month}<br>Moyenne : ${Math.round(d.averageMs / 1000)}s`);
+        })
+        .on("mouseout", () => tooltip.style("display", "none"));
+
+
+}
+        // Créer une heatmap générique
+        function createHeatmap(data, xDomain, yDomain, accessor) {
+            const margin = { top: 30, right: 30, bottom: 40, left: 40 };
+            const width = 800 - margin.left - margin.right;
+            const height = 400 - margin.top - margin.bottom;
+
+            const svg = heatmapContainer
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand()
+                .domain(xDomain)
+                .range([0, width])
+                .padding(0.05);
+
+            const y = yDomain ? d3.scaleBand().domain(yDomain).range([0, height]).padding(0.05) : null;
+
+            const color = d3.scaleSequential(d3.interpolateYlGnBu)
+                .domain([0, d3.max(data, (d) => accessor(d).value)]);
+
+            svg.selectAll(".x-axis")
+                .data(xDomain)
+                .enter()
+                .append("text")
+                .attr("x", (d, i) => x(d) + x.bandwidth() / 2)
+                .attr("y", -5)
+                .style("text-anchor", "middle")
+                .text(d => d);
+
+            svg.selectAll(".y-axis")
+                .data(yDomain || [])
+                .enter()
+                .append("text")
+                .attr("x", -5)
+                .attr("y", (d, i) => y(d) + y.bandwidth() / 2)
+                .style("text-anchor", "middle")
+                .text(d => d);
+
+            svg.selectAll(".cell")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("x", (d) => x(accessor(d).x))
+                .attr("y", (d) => y ? y(accessor(d).y) : 0)
+                .attr("width", x.bandwidth())
+                .attr("height", y ? y.bandwidth() : height)
+                .style("fill", (d) => color(accessor(d).value))
+                .on("mouseover", (event, d) => {
+                    tooltip.transition().duration(200).style("display", "block");
+                    tooltip.html(`${accessor(d).value} ms`)
+                        .style("left", `${event.pageX + 5}px`)
+                        .style("top", `${event.pageY - 28}px`);
+                })
+                .on("mouseout", () => {
+                    tooltip.transition().duration(200).style("display", "none");
+                });
+        }
+

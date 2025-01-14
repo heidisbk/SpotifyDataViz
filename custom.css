@@ -3,7 +3,7 @@
 /* Palette de couleurs Spotify */
 :root {
     --spotify-green: #1DB954;
-    --spotify-dark: #191414;
+    --spotify-dark: #010101;
     --spotify-light: #FFFFFF;
     --spotify-grey: #B3B3B3;
     --navbar-bg: #242424;
@@ -34,6 +34,8 @@ h2, h3 {
     color: var(--spotify-green);
     margin-top: 20px;
     margin-bottom: 10px;
+    stroke: var(--spotify-light); /* Définit la couleur des axes en blanc */
+
 }
 
 /* Boutons */
@@ -88,6 +90,7 @@ button {
 #graph1 {
     padding-left: 25%;
     height: 400px; /* Hauteur réduite */
+
 }
 
 #graph2 {
@@ -156,22 +159,22 @@ button {
 }
 
 /* Styles for selectors inside graph1 and graph2 */
-#selectors1, #selectors2 {
+#selectors1, #selectors2, #selectors4  {
     margin-top: 10px;
     margin-bottom: 20px;
 }
 
-#selectors1 select, #selectors2 select {
+#selectors1 select, #selectors2 select, #selectors4 select {
     width: 10%; /* Diminution de la largeur */
 }
 
 /* Styles for dataSources buttons inside graph1 and graph2 */
-#dataSources1, #dataSources2 {
+#dataSources1, #dataSources2, #dataSources4 {
     /*display: flex;
     justify-content: center;*/
     margin-bottom: 10px;
 }
 
-#dataSources1 button, #dataSources2 button {
+#dataSources1 button, #dataSources2 button, #dataSources4 button  {
     margin: 0 5px;
 }
