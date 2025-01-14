@@ -51,7 +51,6 @@ const artistCountryMap = {
     "ISHA": "Belgium",
     "The Weeknd": "Canada",
     "PARTYNEXTDOOR": "Canada",
-    "Ajna": "France",
     "SZA": "United States",
     "Cash Cobain": "United States",
     "21 Savage": "United States",
@@ -60,6 +59,33 @@ const artistCountryMap = {
     "Lil Uzi Vert": "United States",
     "070 Shake": "United States",
     // Ajoutez d'autres artistes ici
+};
+
+// Variables pour Chart.js
+let chartInstance1, radarInstance1;
+let chartInstance2, radarInstance2;
+
+// Variables pour les nouveaux graphiques (Chart.js)
+let currentDataSet1 = "Clarence"; // Default dataset for graph1
+let rawDataChart1 = [];
+let groupedDataChart1 = { daily: {}, weekly: {}, monthly: {} };
+
+let currentDataSet2 = "Clarence"; // Default dataset for graph2
+let rawDataChart2 = [];
+let groupedDataChart2 = { daily: {}, weekly: {}, monthly: {} };
+
+// Data sources pour les graphiques
+const dataSources = {
+    Clarence: [
+        "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/main/data/clarence/StreamingHistory_music_1.json",
+        "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/main/data/clarence/StreamingHistory_music_0.json"
+    ],
+    Heidi: [
+        "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/main/data/heidi/StreamingHistory_music_0.json",
+        "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/main/data/heidi/StreamingHistory_music_1.json",
+        "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/main/data/heidi/StreamingHistory_music_2.json",
+        "https://raw.githubusercontent.com/heidisbk/SpotifyDataViz/refs/heads/main/data/heidi/StreamingHistory_music_3.json"
+    ]
 };
 
 // Fonction pour obtenir le token d'accès depuis l'URL
@@ -208,8 +234,8 @@ function createGenreBubbleChart(data) {
         .enter()
         .append('circle')
         .attr('r', d => d.radius)
-        .attr('fill', (d, i) => color(i))
-        .attr('stroke', '#fff')
+        .attr('fill', 'rgba(29, 185, 84, 0.2)')
+        .attr('stroke', '#1DB954')
         .attr('stroke-width', 1.5)
         .on('mouseover', function(event, d) {
             tooltip.transition()
@@ -272,18 +298,19 @@ function createWorldMap(artistCountries) {
         .attr('height', height);
 
     // Définir la projection et le générateur de chemins
-    const projection = d3.geoMercator()
-        .scale(130)
-        .translate([width / 2, height / 1.5]);
+    const projection = d3.geoNaturalEarth1() // Projection ajustée pour un meilleur fit
+        .scale((width / 2 / Math.PI))
+        .translate([width / 2, height / 2]);
 
     const path = d3.geoPath().projection(projection);
 
     // Définir l'échelle de couleurs
     const color = d3.scaleSequential(d3.interpolateBlues)
+        .interpolator(d3.interpolateRgb("#FFFFFF","#0b8f39"))
         .domain([0, d3.max(Object.values(artistCountries))]);
 
     // Tooltip
-    const tooltip = d3.select('body').append('div')
+    const tooltipMap = d3.select('body').append('div')
         .attr('class', 'tooltip')
         .style('position', 'absolute')
         .style('text-align', 'center')
@@ -317,15 +344,15 @@ function createWorldMap(artistCountries) {
             .on('mouseover', function(event, d) {
                 const countryName = d.properties.name;
                 const count = artistCountries[countryName] || 0;
-                tooltip.transition()
+                tooltipMap.transition()
                     .duration(200)
                     .style('opacity', 0.9);
-                tooltip.html(`<strong>${countryName}</strong><br/>Artistes: ${count}`)
+                tooltipMap.html(`<strong>${countryName}</strong><br/>Artistes: ${count}`)
                     .style('left', (event.pageX) + 'px')
                     .style('top', (event.pageY - 28) + 'px');
             })
             .on('mouseout', function() {
-                tooltip.transition()
+                tooltipMap.transition()
                     .duration(500)
                     .style('opacity', 0);
             });
@@ -379,8 +406,14 @@ function createWorldMap(artistCountries) {
         const newWidth = container.clientWidth;
         const newHeight = container.clientHeight;
         svg.attr('width', newWidth).attr('height', newHeight);
-        projection.translate([newWidth / 2, newHeight / 1.5]);
+        projection
+            .scale((newWidth / 2 / Math.PI))
+            .translate([newWidth / 2, newHeight / 2]);
         svg.selectAll('path').attr('d', path);
+
+        // Mettre à jour la légende
+        svg.select('.legend')
+            .attr('transform', `translate(${newWidth - legendWidth - 20}, ${newHeight - 40})`);
     });
 }
 
@@ -401,6 +434,10 @@ function logoutUser(userId) {
     // Si l'utilisateur déconnecté était sélectionné, nettoyer l'affichage
     const selectedUser = document.getElementById('user-select').value;
     if (selectedUser === userId) {
+        document.getElementById('graph1').querySelector('#chartCanvas1')?.remove(); // Nettoyer le chartCanvas1
+        document.getElementById('radarGraph1').innerHTML = ''; // Nettoyer le radar graph1
+        document.getElementById('graph2').querySelector('#chartCanvas2')?.remove(); // Nettoyer le chartCanvas2
+        document.getElementById('radarGraph2').innerHTML = ''; // Nettoyer le radar graph2
         document.getElementById('graph3').innerHTML = ''; // Nettoyer le bubble chart
         document.getElementById('graph5').innerHTML = ''; // Nettoyer la carte du monde
         document.getElementById('login-section').style.display = 'block';
@@ -529,4 +566,461 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('add-user-button').addEventListener('click', addUser);
     document.getElementById('logout-button').addEventListener('click', handleLogout);
     document.getElementById('user-select').addEventListener('change', handleUserSelection);
+
+    // Ajouter les événements pour graph1 (Top Artistes)
+    document.getElementById('clarenceButton1').addEventListener('click', () => loadData1("Clarence"));
+    document.getElementById('heidiButton1').addEventListener('click', () => loadData1("Heidi"));
+
+    // Ajouter les événements pour graph2 (Top Tracks)
+    document.getElementById('clarenceButton2').addEventListener('click', () => loadData2("Clarence"));
+    document.getElementById('heidiButton2').addEventListener('click', () => loadData2("Heidi"));
 });
+
+// Fonctions pour graph1 (Top Artistes)
+
+// Fonction pour charger les données pour graph1
+function loadData1(dataset) {
+    currentDataSet1 = dataset;
+    groupedDataChart1 = { daily: {}, weekly: {}, monthly: {} }; // Reset grouped data
+    const urls = dataSources[dataset];
+
+    Promise.all(urls.map(url => fetch(url).then(response => response.json())))
+        .then(responses => {
+            rawDataChart1 = responses.flat();
+            processDataChart1();
+            populatePeriodSelectorChart1();
+            //alert(`Loaded data for ${dataset}`);
+        })
+        .catch(err => {
+            console.error("Error loading data:", err);
+            alert("Échec du chargement des données. Veuillez consulter la console pour plus de détails.");
+        });
+}
+
+// Fonction pour traiter les données pour graph1
+function processDataChart1() {
+    rawDataChart1.forEach(entry => {
+        const artist = entry.artistName;
+        const msPlayed = entry.msPlayed;
+        const date = new Date(entry.endTime);
+        const day = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        const week = `${date.getFullYear()}-W${getWeek(date)}`; // YYYY-W##
+        const month = `${date.getFullYear()}-${date.getMonth() + 1}`; // YYYY-MM
+
+        // Group by day
+        if (!groupedDataChart1.daily[day]) groupedDataChart1.daily[day] = {};
+        if (!groupedDataChart1.daily[day][artist]) groupedDataChart1.daily[day][artist] = 0;
+        groupedDataChart1.daily[day][artist] += msPlayed;
+
+        // Group by week
+        if (!groupedDataChart1.weekly[week]) groupedDataChart1.weekly[week] = {};
+        if (!groupedDataChart1.weekly[week][artist]) groupedDataChart1.weekly[week][artist] = 0;
+        groupedDataChart1.weekly[week][artist] += msPlayed;
+
+        // Group by month
+        if (!groupedDataChart1.monthly[month]) groupedDataChart1.monthly[month] = {};
+        if (!groupedDataChart1.monthly[month][artist]) groupedDataChart1.monthly[month][artist] = 0;
+        groupedDataChart1.monthly[month][artist] += msPlayed;
+    });
+}
+
+// Fonction pour peupler le sélecteur de période pour graph1
+function populatePeriodSelectorChart1() {
+    const periodSelector = document.getElementById('periodSelector1');
+    const dateSelector = document.getElementById('dateSelector1');
+    
+    periodSelector.addEventListener('change', function() {
+        const period = periodSelector.value;
+        dateSelector.innerHTML = '<option value="">Choisir une période</option>'; // Clear options
+
+        if (groupedDataChart1[period]) {
+            Object.keys(groupedDataChart1[period]).sort().forEach(periodKey => {
+                const option = document.createElement('option');
+                option.value = periodKey;
+                option.textContent = periodKey;
+                dateSelector.appendChild(option);
+            });
+        }
+
+        // Update chart automatically if a period is selected
+        updateChart1();
+    });
+
+    // Add listener for date selection
+    dateSelector.addEventListener('change', updateChart1);
+
+    // Initial population for the daily period
+    periodSelector.dispatchEvent(new Event('change'));
+}
+
+// Fonction pour mettre à jour le graphique1 en fonction de la sélection
+function updateChart1() {
+    const periodSelector = document.getElementById('periodSelector1');
+    const dateSelector = document.getElementById('dateSelector1');
+    const selectedPeriod = periodSelector.value;
+    const selectedPeriodKey = dateSelector.value;
+
+    if (!selectedPeriod || !selectedPeriodKey || !groupedDataChart1[selectedPeriod][selectedPeriodKey]) {
+        //alert("Choisir une période valide.");
+        return;
+    }
+
+    const artistData = groupedDataChart1[selectedPeriod][selectedPeriodKey];
+    const topArtists = Object.entries(artistData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+    const labels = topArtists.map(item => item[0]);
+    const data = topArtists.map(item => (item[1] / (1000 * 60 * 60)).toFixed(2)); // Convert ms to hours
+
+    renderChart1(labels, data, selectedPeriodKey);
+}
+
+// Fonction pour rendre le graphique1 en barres (Chart.js)
+function renderChart1(labels, data, period) {
+    const ctx = document.getElementById('chartCanvas1').getContext('2d');
+
+    if (chartInstance1) {
+        chartInstance1.destroy();
+    }
+
+    chartInstance1 = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data,
+                backgroundColor: 'rgba(29, 185, 84, 0.2)', // Couleur de fond translucide
+                borderColor: '#1DB954', // Couleur de bordure
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y', // Set labels on the vertical axis
+            onClick: (e, elements) => {
+                if (elements.length > 0) {
+                    const artist = labels[elements[0].index];
+                    renderRadarChart1(artist);
+                }
+            },
+            scales: {
+                x: { display: false },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Artistes'
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            const durationMs = tooltipItem.raw * 60 * 60 * 1000; // Convertit l'heure en millisecondes
+                            return `${formatDuration(durationMs)}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Fonction pour rendre le graphique radar1 (Chart.js)
+function renderRadarChart1(artist) {
+    const artistData = rawDataChart1.filter(entry => entry.artistName === artist);
+    const monthlyData = {};
+
+    artistData.forEach(entry => {
+        const date = new Date(entry.endTime);
+        const month = `${date.getFullYear()}-${date.getMonth() + 1}`;
+        const msPlayed = entry.msPlayed;
+
+        if (!monthlyData[month]) monthlyData[month] = 0;
+        monthlyData[month] += msPlayed;
+    });
+
+    const labels = Object.keys(monthlyData).sort();
+    const data = Object.values(monthlyData).map(ms => (ms / (1000 * 60 * 60)).toFixed(2)); // Convert ms to hours
+
+    // Clear existing radar graph1
+    const radarGraphDiv = document.getElementById('radarGraph1');
+    radarGraphDiv.innerHTML = '';
+
+    // Create radar chart canvas
+    const radarCanvas = document.createElement('canvas');
+    radarGraphDiv.appendChild(radarCanvas);
+
+    const radarCtx = radarCanvas.getContext('2d');
+
+    radarInstance1 = new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+            labels,
+            datasets: [{
+                label: artist,
+                data,
+                fill: true,
+                backgroundColor: 'rgba(29, 185, 84, 0.2)', // Couleur de remplissage translucide
+                borderColor: '#1DB954', // Couleur de bordure
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    min: 0,
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatDuration(value * 60 * 60 * 1000); // Convert hours to ms
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            const durationMs = tooltipItem.raw * 60 * 60 * 1000; // Convertit l'heure en millisecondes
+                            return `${formatDuration(durationMs)}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Fonctions pour graph2 (Top Tracks)
+
+// Fonction pour charger les données pour graph2
+function loadData2(dataset) {
+    currentDataSet2 = dataset;
+    groupedDataChart2 = { daily: {}, weekly: {}, monthly: {} }; // Reset grouped data
+    const urls = dataSources[dataset];
+
+    Promise.all(urls.map(url => fetch(url).then(response => response.json())))
+        .then(responses => {
+            rawDataChart2 = responses.flat();
+            processDataChart2();
+            populatePeriodSelectorChart2();
+            //alert(`Loaded data for ${dataset}`);
+        })
+        .catch(err => {
+            console.error("Error loading data:", err);
+            alert("Échec du chargement des données. Veuillez consulter la console pour plus de détails.");
+        });
+}
+
+// Fonction pour traiter les données pour graph2
+function processDataChart2() {
+    rawDataChart2.forEach(entry => {
+        const track = entry.trackName;
+        const artist = entry.artistName; // Correct field for artist
+        const msPlayed = entry.msPlayed;
+        const date = new Date(entry.endTime);
+        const day = date.toISOString().split('T')[0];
+        const week = `${date.getFullYear()}-W${getWeek(date)}`;
+        const month = `${date.getFullYear()}-${date.getMonth() + 1}`;
+
+        if (!groupedDataChart2.daily[day]) groupedDataChart2.daily[day] = {};
+        if (!groupedDataChart2.daily[day][track]) groupedDataChart2.daily[day][track] = { msPlayed, artist };
+        groupedDataChart2.daily[day][track].msPlayed += msPlayed;
+
+        if (!groupedDataChart2.weekly[week]) groupedDataChart2.weekly[week] = {};
+        if (!groupedDataChart2.weekly[week][track]) groupedDataChart2.weekly[week][track] = { msPlayed, artist };
+        groupedDataChart2.weekly[week][track].msPlayed += msPlayed;
+
+        if (!groupedDataChart2.monthly[month]) groupedDataChart2.monthly[month] = {};
+        if (!groupedDataChart2.monthly[month][track]) groupedDataChart2.monthly[month][track] = { msPlayed, artist };
+        groupedDataChart2.monthly[month][track].msPlayed += msPlayed;
+    });
+}
+
+// Fonction pour peupler le sélecteur de période pour graph2
+function populatePeriodSelectorChart2() {
+    const periodSelector = document.getElementById('periodSelector2');
+    const dateSelector = document.getElementById('dateSelector2');
+    
+    periodSelector.addEventListener('change', function() {
+        const period = periodSelector.value;
+        dateSelector.innerHTML = '<option value="">Choisir une période</option>'; // Clear options
+
+        if (groupedDataChart2[period]) {
+            Object.keys(groupedDataChart2[period]).sort().forEach(periodKey => {
+                const option = document.createElement('option');
+                option.value = periodKey;
+                option.textContent = periodKey;
+                dateSelector.appendChild(option);
+            });
+        }
+
+        // Update chart automatically if a period is selected
+        updateChart2();
+    });
+
+    // Add listener for date selection
+    dateSelector.addEventListener('change', updateChart2);
+
+    // Initial population for the daily period
+    periodSelector.dispatchEvent(new Event('change'));
+}
+
+// Fonction pour mettre à jour le graphique2 en fonction de la sélection
+function updateChart2() {
+    const periodSelector = document.getElementById('periodSelector2');
+    const dateSelector = document.getElementById('dateSelector2');
+    const selectedPeriod = periodSelector.value;
+    const selectedPeriodKey = dateSelector.value;
+
+    if (!selectedPeriod || !selectedPeriodKey || !groupedDataChart2[selectedPeriod][selectedPeriodKey]) {
+        //alert("Choisir une période valide.");
+        return;
+    }
+
+    const trackData = groupedDataChart2[selectedPeriod][selectedPeriodKey];
+    const topTracks = Object.entries(trackData)
+        .sort((a, b) => b[1].msPlayed - a[1].msPlayed)
+        .slice(0, 10);
+
+    const labels = topTracks.map(item => item[0]);
+    const data = topTracks.map(item => item[1].msPlayed); // Raw msPlayed for conversion
+    const artists = topTracks.map(item => item[1].artist); // Extract artist names
+
+    renderChart2(labels, data, artists, selectedPeriodKey);
+}
+
+// Fonction pour rendre le graphique2 en pie (Chart.js)
+function renderChart2(labels, data, artists, period) {
+    const ctx = document.getElementById('chartCanvas2').getContext('2d');
+
+    if (chartInstance2) {
+        chartInstance2.destroy();
+    }
+
+    chartInstance2 = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels,
+            datasets: [{
+                label: `Top 10 Tracks in ${period}`,
+                data,
+                backgroundColor: labels.map(() => `rgba(29, 185, 84, 0.2)`), // Couleur translucide
+                borderColor: '#1DB954', // Couleur de bordure
+                borderWidth: 1,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            const ms = tooltipItem.raw;
+                            const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                            const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+                            const seconds = Math.floor((ms % (60 * 1000)) / 1000);
+                            const trackIndex = tooltipItem.dataIndex;
+                            const artist = artists[trackIndex];
+                            
+                            return `${artist} - ${hours}h ${minutes}m ${seconds}s`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'right' // Position the legend to the right
+                }
+            }
+        }
+    });
+}
+
+// Fonction pour rendre le graphique radar2 (Chart.js)
+function renderRadarChart2(artist) {
+    const artistData = rawDataChart2.filter(entry => entry.artistName === artist);
+    const monthlyData = {};
+
+    artistData.forEach(entry => {
+        const date = new Date(entry.endTime);
+        const month = `${date.getFullYear()}-${date.getMonth() + 1}`;
+        const msPlayed = entry.msPlayed;
+
+        if (!monthlyData[month]) monthlyData[month] = 0;
+        monthlyData[month] += msPlayed;
+    });
+
+    const labels = Object.keys(monthlyData).sort();
+    const data = Object.values(monthlyData).map(ms => (ms / (1000 * 60 * 60)).toFixed(2)); // Convert ms to hours
+
+    // Clear existing radar graph2
+    const radarGraphDiv = document.getElementById('radarGraph2');
+    radarGraphDiv.innerHTML = '';
+
+    // Create radar chart canvas
+    const radarCanvas = document.createElement('canvas');
+    radarGraphDiv.appendChild(radarCanvas);
+
+    const radarCtx = radarCanvas.getContext('2d');
+
+    radarInstance2 = new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+            labels,
+            datasets: [{
+                label: artist,
+                data,
+                fill: true,
+                backgroundColor: 'rgba(29, 185, 84, 0.2)', // Couleur de remplissage translucide
+                borderColor: '#1DB954', // Couleur de bordure
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    min: 0,
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatDuration(value * 60 * 60 * 1000); // Convert hours to ms
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            const durationMs = tooltipItem.raw * 60 * 60 * 1000; // Convertit l'heure en millisecondes
+                            return `${formatDuration(durationMs)}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Fonctions communes
+
+// Helper function to get ISO week number
+function getWeek(date) {
+    const firstJan = new Date(date.getFullYear(), 0, 1);
+    const dayOfYear = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
+    return Math.ceil((dayOfYear + firstJan.getDay() + 1) / 7);
+}
+
+// Fonction pour formater la durée
+function formatDuration(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    return `${hours % 24}h ${minutes % 60}m ${seconds % 60}s`;
+}

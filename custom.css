@@ -29,10 +29,10 @@ body {
 }
 
 /* Titres */
-h2 {
-    font-size: 2rem;
+h2, h3 {
+    font-size: 1.5rem;
     color: var(--spotify-green);
-    margin-top: 100px;
+    margin-top: 20px;
     margin-bottom: 10px;
 }
 
@@ -66,25 +66,54 @@ button {
     transform: scale(1.05);
 }
 
-/* Graphes D3.js */
+.btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: scale(1.05);
+}
+
+/* Graphes D3.js et Chart.js */
 .graph-container {
     background-color: var(--spotify-dark);
     border: 2px solid var(--spotify-green);
     border-radius: 10px;
     padding: 10px;
-    height: 600px; /* Ajustez la hauteur selon vos besoins */
+    overflow: auto;
 }
 
-.graph-container svg {
+#graph1, #graph2 {
+    height: 400px; /* Hauteur réduite */
+}
+
+#graph3 {
+    height: 600px; /* Ajustez selon vos besoins */
+}
+
+#graph4 {
+    height: 600px;
+}
+
+#graph5 {
+    height: 600px; /* Hauteur augmentée pour graph5 */
+}
+
+.graph-container svg, canvas {
     width: 100%;
     height: 100%;
 }
 
-/* Responsivité des Images */
+/* Responsivité des Graphiques */
 @media (max-width: 768px) {
     /* #vinyle-image removed */
     .graph-container {
-        height: 200px;
+        height: 400px;
+    }
+    #graph5 {
+        height: 500px; /* Ajustement pour les petits écrans */
     }
 }
 
@@ -104,11 +133,6 @@ button {
     opacity: 0;
 }
 
-/* Ajuster la hauteur du conteneur du Bubble Chart */
-#genre-bubble-chart {
-    height: 600px; /* Ajustez selon vos besoins */
-}
-
 /* Styles pour le Menu Utilisateur */
 #user-select {
     width: 200px;
@@ -123,4 +147,25 @@ button {
 #add-user-button:hover {
     background-color: #1ed760;
     transform: scale(1.05);
+}
+
+/* Styles for selectors inside graph1 and graph2 */
+#selectors1, #selectors2 {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+#selectors1 select, #selectors2 select {
+    width: 10%; /* Diminution de la largeur */
+}
+
+/* Styles for dataSources buttons inside graph1 and graph2 */
+#dataSources1, #dataSources2 {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+#dataSources1 button, #dataSources2 button {
+    margin: 0 5px;
 }

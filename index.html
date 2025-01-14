@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Visualization</title>
+    <title>Spotify Data Visualization</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
@@ -13,6 +13,10 @@
       integrity="sha384-9ndCyUa6mYVn0sI04mQZzF0eVJY9IetFq5e1tBOA6LgG3sbVHjm6Xa8m3dGqK4BX"
       crossorigin="anonymous"
     >
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="custom.css">
 </head>
@@ -26,48 +30,84 @@
             <!-- Menu Utilisateur -->
             <div class="d-flex align-items-center">
                 <select id="user-select" class="form-select me-2" aria-label="Sélectionner un utilisateur">
-                    <option value="" disabled selected>Choisir un utilisateur</option>
+                    <option value="" disabled selected>Select a User</option>
                     <!-- Les options seront ajoutées dynamiquement -->
                 </select>
-                <button id="add-user-button" class="btn btn-primary">Ajouter Utilisateur</button>
-                <button id="logout-button" class="btn btn-danger btn-lg ms-2 d-none">Se Déconnecter</button>
+                <button id="add-user-button" class="btn btn-primary">Add User</button>
+                <button id="logout-button" class="btn btn-danger btn-lg ms-2 d-none">Disconnect</button>
             </div>
         </div>
     </nav>
 
     <!-- Contenu Principal -->
     <div class="container mt-5 pt-4 text-center">
-        <!-- Image de Vinyle Supprimée -->
-
         <!-- Section des Graphes -->
         <div class="row g-4 my-4">
             <!-- Graph1 -->
             <div class="col-md-4">
-                <div id="graph1" class="graph-container"></div>
+                <h2>Top Artists</h2>
+                <div id="graph1" class="graph-container">
+                    <div id="dataSources1">
+                        <button id="clarenceButton1" class="btn btn-secondary">Clarence</button>
+                        <button id="heidiButton1" class="btn btn-secondary">Heidi</button>
+                    </div>
+                    <div id="selectors1">
+                        <select id="periodSelector1" class="form-select">
+                          <option value="daily">Select a day</option>
+                          <option value="weekly">Select a week</option>
+                          <option value="monthly">Select a month</option>
+                        </select>
+                        <select id="dateSelector1" class="form-select mt-2">
+                          <option value="">Select a period</option>
+                        </select>
+                    </div>
+
+                    <canvas id="chartCanvas1" width="600" height="400"></canvas>
+                    <div id="radarGraph1"></div>
+                </div>
             </div>
             <!-- Graph2 -->
             <div class="col-12">
-                <div id="graph2" class="graph-container"></div>
+                <h2>Top Tracks</h2>
+                <div id="graph2" class="graph-container">
+                    <div id="dataSources2">
+                        <button id="clarenceButton2" class="btn btn-secondary">Clarence</button>
+                        <button id="heidiButton2" class="btn btn-secondary">Heidi</button>
+                    </div>
+                    <div id="selectors2">
+                        <select id="periodSelector2" class="form-select">
+                          <option value="daily">Select a day</option>
+                          <option value="weekly">Select a week</option>
+                          <option value="monthly">Select a month</option>
+                        </select>
+                        <select id="dateSelector2" class="form-select mt-2">
+                          <option value="">Select a period</option>
+                        </select>
+                    </div>
+
+                    <canvas id="chartCanvas2" width="600" height="400"></canvas>
+                    <div id="radarGraph2"></div>
+                </div>
             </div>
             <!-- Graph3 -->
             <div class="col-md-4">
-                <h2>Genres Musicaux</h2>
+                <h2>Musical Genres</h2>
                 <div id="graph3" class="graph-container"></div>
             </div>
-            <!-- Graph4 -->
+            <!-- Graph4 
             <div class="col-md-4">
                 <div id="graph4" class="graph-container"></div>
-            </div>
+            </div> -->
             <!-- Graph5 -->
             <div class="col-md-4">
-                <h2>Origines des Artistes</h2>
+                <h2>Origins of the Artists</h2>
                 <div id="graph5" class="graph-container"></div>
             </div>
         </div>
 
         <!-- Bouton de Connexion Spotify -->
         <div id="login-section" class="my-4">
-            <button id="login-button" class="btn btn-success btn-lg">Se Connecter avec Spotify</button>
+            <button id="login-button" class="btn btn-success btn-lg">Connect with Spotify</button>
         </div>
     </div>
 
@@ -77,8 +117,6 @@
       integrity="sha384-ENjdO4Dr2bkBIFxQpeoFZrLl5/JqA4v1Lg/HIJKjrUyOn1Ai0Gyu6ER3fW/jkN6N"
       crossorigin="anonymous"
     ></script>
-    <!-- D3.js -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
     <!-- Script Personnalisé -->
     <script src="script.js"></script>
 </body>
