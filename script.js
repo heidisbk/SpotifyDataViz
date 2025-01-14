@@ -11,6 +11,57 @@ const SCOPES = [
     'user-top-read' // Pour lire les top artistes
 ];
 
+// Mapping des artistes à leurs pays d'origine (manuel)
+const artistCountryMap = {
+    "The Beatles": "United Kingdom",
+    "Taylor Swift": "United States",
+    "Ed Sheeran": "United Kingdom",
+    "BTS": "South Korea",
+    "Shakira": "Colombia",
+    "Beyoncé": "United States",
+    "Adele": "United Kingdom",
+    "Drake": "Canada",
+    "Bad Bunny": "Puerto Rico",
+    "Booba": "France",
+    "SCH": "France",
+    "Rounhaa": "France",
+    "Gazo": "France",
+    "FEMTOGO": "France",
+    "Green Montana": "France",
+    "La Fève": "France",
+    "Jwles": "France",
+    "Dalí": "France",
+    "Prince": "United States",
+    "Jazzy Bazz": "France",
+    "Mad Keys": "United States",
+    "The Smiths": "United Kingdom",
+    "JeanJass": "Belgium",
+    "Billie Eilish": "United States",
+    "Queen": "United Kingdom",
+    "Alpha Wann": "France",
+    "Tyler, The Creator": "United States",
+    "Krisy": "Belgium",
+    "Yamê": "France",
+    "Ajna": "France",
+    "Prince Waly": "France",
+    "Jungle Jack": "France",
+    "Jimi Hendrix": "United States",
+    "Kodak Black": "United States",
+    "Hamza": "Belgium",
+    "ISHA": "Belgium",
+    "The Weeknd": "Canada",
+    "PARTYNEXTDOOR": "Canada",
+    "Ajna": "France",
+    "SZA": "United States",
+    "Cash Cobain": "United States",
+    "21 Savage": "United States",
+    "Metro Boomin": "United States",
+    "Future": "United States",
+    "Lil Uzi Vert": "United States",
+    "070 Shake": "United States",
+    // Ajoutez d'autres artistes ici
+};
+
 // Fonction pour obtenir le token d'accès depuis l'URL
 function getTokenFromUrl() {
     const hash = window.location.hash.substring(1);
@@ -18,21 +69,28 @@ function getTokenFromUrl() {
     return {
         access_token: params.get('access_token'),
         token_type: params.get('token_type'),
-        expires_in: params.get('expires_in')
+        expires_in: params.get('expires_in'),
+        state: params.get('state') // Ajout du state
     };
 }
 
-// Fonction pour afficher les genres musicaux
+// Fonction pour afficher les genres et la carte du monde
 async function displayGenres(token) {
     try {
         // Récupérer les top artistes
-        const topArtists = await getTopArtists(token, 50, 'medium_term'); // Vous pouvez ajuster les paramètres
+        const topArtists = await getTopArtists(token, 50, 'medium_term'); // Ajustez les paramètres si nécessaire
 
         // Agréger les genres
         const aggregatedGenres = aggregateGenres(topArtists);
 
-        // Créer le Bubble Chart
+        // Créer le Bubble Chart dans graph3
         createGenreBubbleChart(aggregatedGenres);
+
+        // Agréger les pays des artistes
+        const aggregatedCountries = aggregateArtistCountries(topArtists);
+
+        // Créer la carte du monde dans graph5
+        createWorldMap(aggregatedCountries);
 
         // Afficher le bouton de déconnexion et masquer le login
         document.getElementById('login-section').style.display = 'none';
@@ -67,7 +125,7 @@ async function getTopArtists(token, limit = 50, time_range = 'medium_term') {
     }
 }
 
-// Fonction pour agréger les fréquences des genres
+// Fonction pour agréger les genres
 function aggregateGenres(topArtists) {
     const genreCounts = {};
 
@@ -93,14 +151,39 @@ function aggregateGenres(topArtists) {
     return aggregatedData;
 }
 
-// Fonction pour créer le Bubble Chart des Genres
+// Fonction pour agréger les pays des artistes
+function aggregateArtistCountries(topArtists) {
+    const countryCounts = {};
+
+    topArtists.forEach(artist => {
+        const country = artistCountryMap[artist.name];
+        if (country) {
+            if (country in countryCounts) {
+                countryCounts[country] += 1;
+            } else {
+                countryCounts[country] = 1;
+            }
+        } else {
+            // Optionnel : Compter les artistes sans pays défini
+            if ('Unknown' in countryCounts) {
+                countryCounts['Unknown'] += 1;
+            } else {
+                countryCounts['Unknown'] = 1;
+            }
+        }
+    });
+
+    return countryCounts;
+}
+
+// Fonction pour créer le Bubble Chart dans graph3
 function createGenreBubbleChart(data) {
-    const container = document.getElementById('genre-bubble-chart');
-    container.innerHTML = ''; // Nettoyer le conteneur existant si nécessaire
+    const container = document.getElementById('graph3'); // Changement de cible
+    container.innerHTML = ''; // Nettoyer le conteneur existant
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    const svg = d3.select('#genre-bubble-chart')
+    const svg = d3.select(container)
         .append('svg')
         .attr('width', width)
         .attr('height', height);
@@ -176,6 +259,131 @@ function createGenreBubbleChart(data) {
     });
 }
 
+// Fonction pour créer la Carte du Monde dans graph5
+function createWorldMap(artistCountries) {
+    const container = document.getElementById('graph5');
+    container.innerHTML = ''; // Nettoyer le conteneur existant
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    const svg = d3.select(container)
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+
+    // Définir la projection et le générateur de chemins
+    const projection = d3.geoMercator()
+        .scale(130)
+        .translate([width / 2, height / 1.5]);
+
+    const path = d3.geoPath().projection(projection);
+
+    // Définir l'échelle de couleurs
+    const color = d3.scaleSequential(d3.interpolateBlues)
+        .domain([0, d3.max(Object.values(artistCountries))]);
+
+    // Tooltip
+    const tooltip = d3.select('body').append('div')
+        .attr('class', 'tooltip')
+        .style('position', 'absolute')
+        .style('text-align', 'center')
+        .style('width', '120px')
+        .style('height', '50px')
+        .style('padding', '5px')
+        .style('font', '12px sans-serif')
+        .style('background', 'rgba(0,0,0,0.6)')
+        .style('color', '#fff')
+        .style('border', '0px')
+        .style('border-radius', '8px')
+        .style('pointer-events', 'none')
+        .style('opacity', 0);
+
+    // Charger les données GeoJSON pour le monde
+    d3.json('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson').then(worldData => {
+        // Dessiner la carte
+        svg.append('g')
+            .selectAll('path')
+            .data(worldData.features)
+            .enter()
+            .append('path')
+            .attr('d', path)
+            .attr('fill', d => {
+                const countryName = d.properties.name;
+                const count = artistCountries[countryName] || 0;
+                return count > 0 ? color(count) : '#ccc';
+            })
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 0.5)
+            .on('mouseover', function(event, d) {
+                const countryName = d.properties.name;
+                const count = artistCountries[countryName] || 0;
+                tooltip.transition()
+                    .duration(200)
+                    .style('opacity', 0.9);
+                tooltip.html(`<strong>${countryName}</strong><br/>Artistes: ${count}`)
+                    .style('left', (event.pageX) + 'px')
+                    .style('top', (event.pageY - 28) + 'px');
+            })
+            .on('mouseout', function() {
+                tooltip.transition()
+                    .duration(500)
+                    .style('opacity', 0);
+            });
+
+        // Légende
+        const legendWidth = 300;
+        const legendHeight = 10;
+
+        const legend = svg.append('g')
+            .attr('class', 'legend')
+            .attr('transform', `translate(${width - legendWidth - 20}, ${height - 40})`);
+
+        // Créer un dégradé pour la légende
+        const defs = svg.append('defs');
+
+        const linearGradient = defs.append('linearGradient')
+            .attr('id', 'linear-gradient');
+
+        linearGradient.selectAll('stop')
+            .data([
+                {offset: '0%', color: color.range()[0]},
+                {offset: '100%', color: color.range()[1]}
+            ])
+            .enter()
+            .append('stop')
+            .attr('offset', d => d.offset)
+            .attr('stop-color', d => d.color);
+
+        legend.append('rect')
+            .attr('width', legendWidth)
+            .attr('height', legendHeight)
+            .style('fill', 'url(#linear-gradient)');
+
+        // Définir l'échelle pour l'axe des X de la légende
+        const legendScale = d3.scaleLinear()
+            .domain(color.domain())
+            .range([0, legendWidth]);
+
+        // Définir et ajouter l'axe des X à la légende
+        const legendAxis = d3.axisBottom(legendScale)
+            .ticks(5)
+            .tickFormat(d3.format('d'));
+
+        legend.append('g')
+            .attr('transform', `translate(0, ${legendHeight})`)
+            .call(legendAxis);
+    });
+
+    // Gérer le redimensionnement de la fenêtre
+    window.addEventListener('resize', () => {
+        const newWidth = container.clientWidth;
+        const newHeight = container.clientHeight;
+        svg.attr('width', newWidth).attr('height', newHeight);
+        projection.translate([newWidth / 2, newHeight / 1.5]);
+        svg.selectAll('path').attr('d', path);
+    });
+}
+
 // Fonction pour se déconnecter
 function logoutUser(userId) {
     // Récupérer les utilisateurs depuis localStorage
@@ -193,7 +401,8 @@ function logoutUser(userId) {
     // Si l'utilisateur déconnecté était sélectionné, nettoyer l'affichage
     const selectedUser = document.getElementById('user-select').value;
     if (selectedUser === userId) {
-        document.getElementById('genre-bubble-chart').innerHTML = '';
+        document.getElementById('graph3').innerHTML = ''; // Nettoyer le bubble chart
+        document.getElementById('graph5').innerHTML = ''; // Nettoyer la carte du monde
         document.getElementById('login-section').style.display = 'block';
         document.getElementById('logout-button').classList.add('d-none');
     }
@@ -207,11 +416,15 @@ function addUser() {
 
 // Fonction pour gérer l'état après l'authentification
 async function handleAuth() {
-    const { access_token, expires_in } = getTokenFromUrl();
+    const { access_token, expires_in, state } = getTokenFromUrl();
+    console.log('Access Token:', access_token);
+    console.log('Expires In:', expires_in);
+    console.log('State:', state);
 
     if (access_token) {
         // Récupérer les informations utilisateur
         const userProfile = await fetchUserProfile(access_token);
+        console.log('User Profile:', userProfile);
         if (userProfile) {
             const userId = userProfile.id;
             const userName = userProfile.display_name || userProfile.id;
@@ -229,7 +442,6 @@ async function handleAuth() {
             populateUserSelect();
 
             // Si l'authentification était pour ajouter un utilisateur, sélectionner ce nouvel utilisateur
-            const state = new URLSearchParams(window.location.search).get('state');
             if (state === 'add_user') {
                 document.getElementById('user-select').value = userId;
                 displayGenres(access_token);

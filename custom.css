@@ -36,14 +36,6 @@ h2 {
     margin-bottom: 10px;
 }
 
-/* Image de Vinyle */
-#vinyle-image {
-    max-width: 300px;
-    height: auto;
-    border-radius: 15px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-}
-
 /* Boutons */
 button {
     padding: 10px 20px;
@@ -80,7 +72,7 @@ button {
     border: 2px solid var(--spotify-green);
     border-radius: 10px;
     padding: 10px;
-    height: 300px; /* Ajustez la hauteur selon vos besoins */
+    height: 600px; /* Ajustez la hauteur selon vos besoins */
 }
 
 .graph-container svg {
@@ -90,10 +82,7 @@ button {
 
 /* Responsivité des Images */
 @media (max-width: 768px) {
-    #vinyle-image {
-        max-width: 200px;
-    }
-
+    /* #vinyle-image removed */
     .graph-container {
         height: 200px;
     }
