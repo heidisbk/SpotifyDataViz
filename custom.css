@@ -85,7 +85,13 @@ button {
     overflow: auto;
 }
 
-#graph1, #graph2 {
+#graph1 {
+    padding-left: 25%;
+    height: 400px; /* Hauteur réduite */
+}
+
+#graph2 {
+    padding-left: 35%;
     height: 400px; /* Hauteur réduite */
 }
 
@@ -161,8 +167,8 @@ button {
 
 /* Styles for dataSources buttons inside graph1 and graph2 */
 #dataSources1, #dataSources2 {
-    display: flex;
-    justify-content: center;
+    /*display: flex;
+    justify-content: center;*/
     margin-bottom: 10px;
 }
 
