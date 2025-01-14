@@ -74,3 +74,24 @@ Une démo interactive sera disponible sous peu.
 Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
 ---
+
+## Ressources
+
+Données personnelles Spotify
+
+API Spotify
+
+ChatGPT
+
+
+## IDE:
+
+VSCode
+
+Code Pen
+
+
+## Template
+
+BootStrap
+

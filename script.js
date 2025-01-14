@@ -986,6 +986,9 @@ function renderRadarChart2(artist) {
                 r: {
                     min: 0,
                     beginAtZero: true,
+                    grid: {
+                        color: "white", // Couleur des axes
+                    },
                     ticks: {
                         callback: function(value) {
                             return formatDuration(value * 60 * 60 * 1000); // Convert hours to ms
