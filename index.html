@@ -3,140 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Data Visualization</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-9ndCyUa6mYVn0sI04mQZzF0eVJY9IetFq5e1tBOA6LgG3sbVHjm6Xa8m3dGqK4BX"
-      crossorigin="anonymous"
-    >
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- D3.js -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- Custom CSS -->
+    <title>Spotify Data Viz</title>
+    <!-- Lien vers le fichier CSS personnalisé -->
     <link rel="stylesheet" href="custom.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <!-- Barre de Navigation Fixe avec Classe Personnalisée -->
-    <nav class="navbar navbar-dark navbar-custom fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="assets/images/Spotify_Full_Logo_RGB_Green.png" alt="Spotify Logo" height="40" class="me-2">
-            </a>
-            <!-- Menu Utilisateur -->
-            <div class="d-flex align-items-center">
-                <select id="user-select" class="form-select me-2" aria-label="Sélectionner un utilisateur">
-                    <option value="" disabled selected>Select a User</option>
-                    <!-- Les options seront ajoutées dynamiquement -->
-                </select>
-                <button id="add-user-button" class="btn btn-primary">Add User</button>
-                <button id="logout-button" class="btn btn-danger btn-lg ms-2 d-none">Disconnect</button>
-            </div>
+    <!-- En-tête de la page -->
+    <header>
+        <img src="assets/images/Spotify_Full_Logo_RGB_Green.png" alt="Spotify Logo" class="logo">
+        <h1>Spotify Data Viz</h1>
+        <div class="auth-buttons">
+            <button id="add-user-button">Add User</button>
+            <button id="logout-button" style="display: none;">Disconnect</button>
+            <select id="user-select" style="display: none;">
+                <option value="" disabled selected>Select a user</option>
+            </select>
         </div>
-    </nav>
+    </header>
 
-    <!-- Contenu Principal -->
-    <div class="container mt-5 pt-4 text-center">
-        <!-- Section des Graphes -->
-        <div class="row g-4 my-4">
-            <!-- Graph1 -->
-            <div class="col-md-4">
-                <h2>Top Artists</h2>
-                <div id="graph1" class="graph-container">
-                    <div id="dataSources1">
-                        <button id="clarenceButton1" class="btn btn-secondary">Clarence</button>
-                        <button id="heidiButton1" class="btn btn-secondary">Heidi</button>
-                    </div>
-                    <div id="selectors1">
-                        <select id="periodSelector1" class="form-select">
-                          <option value="daily">Select a day</option>
-                          <option value="weekly">Select a week</option>
-                          <option value="monthly">Select a month</option>
-                        </select>
-                        <select id="dateSelector1" class="form-select mt-2">
-                          <option value="">Select a period</option>
-                        </select>
-                    </div>
+    <!-- Conteneurs pour chaque graphique -->
+    <div id="chart1" class="chart"></div>
+    <!--<div id="radarChartContainer" class="chart radar-chart"></div>-->
+    <div id="chart2" class="chart"></div>
+    <div id="chart3" class="chart"></div>
+    <div id="chart4" class="chart"></div>
+    <div id="chart5" class="chart"></div>
 
-                    <canvas id="chartCanvas1" width="600" height="400"></canvas>
-                    <div id="radarGraph1"></div>
-                </div>
-            </div>
-            <!-- Graph2 -->
-            <div class="col-12">
-                <h2>Top Tracks</h2>
-                <div id="graph2" class="graph-container">
-                    <div id="dataSources2">
-                        <button id="clarenceButton2" class="btn btn-secondary">Clarence</button>
-                        <button id="heidiButton2" class="btn btn-secondary">Heidi</button>
-                    </div>
-                    <div id="selectors2">
-                        <select id="periodSelector2" class="form-select">
-                          <option value="daily">Select a day</option>
-                          <option value="weekly">Select a week</option>
-                          <option value="monthly">Select a month</option>
-                        </select>
-                        <select id="dateSelector2" class="form-select mt-2">
-                          <option value="">Select a period</option>
-                        </select>
-                    </div>
-
-                    <canvas id="chartCanvas2" width="600" height="400"></canvas>
-                    <div id="radarGraph2"></div>
-                </div>
-            </div>
-            <!-- Graph3 -->
-            <div class="col-md-4">
-                <h2>Musical Genres</h2>
-                <div id="graph3" class="graph-container"></div>
-            </div>
-            <!-- Graph4--> 
-            <div class="col-md-4">
-                <div id="graph4" class="graph-container"></div>
-            </div>
-                <div id="dataSources4">
-                    <button id="clarenceButton">Clarence</button>
-                    <button id="heidiButton">Heidi</button>
-                </div>
-                <div id="selectors4">>
-                    <label for="periodSelector4">Choisir une visualisation :</label>
-                    <select id="periodSelector4" class="form-select">
-                        <option value="monthly">Heatmap Mensuelle Moyenne</option>
-                        <option value="weekly">Heatmap Hebdomadaire</option>
-                        <option value="daily">Heatmap Journalière</option>
-                    </select>
-                    </select id="dateSelector4" class="form-select mt-2">
-                    <label for="dateSelector4">Choisissez un mois :</label>
-                    <select id="dateSelector4"></select>
-                    </select>
-                </div>
-                <div id="heatmap"></div>
-                <div class="tooltip"></div>
-
-            <!-- Graph5 -->
-            <div class="col-md-4">
-                <h2>Origins of the Artists</h2>
-                <div id="graph5" class="graph-container"></div>
-            </div>
-        </div>
-
-        <!-- Bouton de Connexion Spotify -->
-        <div id="login-section" class="my-4">
-            <button id="login-button" class="btn btn-success btn-lg">Connect with Spotify</button>
-        </div>
-    </div>
-
-    <!-- Bootstrap JS Bundle (Inclut Popper) -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-ENjdO4Dr2bkBIFxQpeoFZrLl5/JqA4v1Lg/HIJKjrUyOn1Ai0Gyu6ER3fW/jkN6N"
-      crossorigin="anonymous"
-    ></script>
-    <!-- Script Personnalisé -->
+    <!-- Lien vers le fichier JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>

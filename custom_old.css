@@ -1,0 +1,180 @@
+/* custom.css */
+
+/* Palette de couleurs Spotify */
+:root {
+    --spotify-green: #1DB954;
+    --spotify-dark: #010101;
+    --spotify-light: #FFFFFF;
+    --spotify-grey: #B3B3B3;
+    --navbar-bg: #242424;
+}
+
+/* Réinitialisation sélective des marges et paddings */
+body, h1, h2, h3, h4, h5, h6, p, ul, li, a, img, button, select {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--spotify-dark);
+    color: var(--spotify-light);
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Styles de la Barre de Navigation */
+.navbar-custom {
+    background-color: var(--navbar-bg);
+    z-index: 1030; /* S'assurer que la navbar reste au-dessus des autres éléments */
+}
+
+/* Titres */
+h2, h3 {
+    font-size: 1.5rem;
+    color: var(--spotify-green);
+    margin-top: 20px;
+    margin-bottom: 10px;
+    stroke: var(--spotify-light); /* Définit la couleur des axes en blanc */
+
+}
+
+/* Boutons */
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+#login-button {
+    background-color: var(--spotify-green);
+    color: var(--spotify-dark);
+}
+
+#login-button:hover {
+    background-color: #1ed760;
+    transform: scale(1.05);
+}
+
+#logout-button {
+    background-color: #e74c3c;
+    color: var(--spotify-light);
+}
+
+#logout-button:hover {
+    background-color: #c0392b;
+    transform: scale(1.05);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: scale(1.05);
+}
+
+/* Graphes D3.js et Chart.js */
+.graph-container {
+    background-color: var(--spotify-dark);
+    border: 2px solid var(--spotify-green);
+    border-radius: 10px;
+    padding: 10px;
+    overflow: auto;
+}
+
+#graph1 {
+    padding-left: 25%;
+    height: 400px; /* Hauteur réduite */
+
+}
+
+#graph2 {
+    padding-left: 35%;
+    height: 400px; /* Hauteur réduite */
+}
+
+#graph3 {
+    height: 600px; /* Ajustez selon vos besoins */
+}
+
+#graph4 {
+    height: 600px;
+}
+
+#graph5 {
+    height: 600px; /* Hauteur augmentée pour graph5 */
+}
+
+.graph-container svg, canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* Responsivité des Graphiques */
+@media (max-width: 768px) {
+    /* #vinyle-image removed */
+    .graph-container {
+        height: 400px;
+    }
+    #graph5 {
+        height: 500px; /* Ajustement pour les petits écrans */
+    }
+}
+
+/* Tooltip */
+.tooltip {
+    position: absolute;
+    text-align: center;
+    width: 120px;
+    height: 50px;
+    padding: 5px;
+    font: 12px sans-serif;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+}
+
+/* Styles pour le Menu Utilisateur */
+#user-select {
+    width: 200px;
+    margin-right: 10px;
+}
+
+#add-user-button {
+    background-color: #1DB954;
+    color: #fff;
+}
+
+#add-user-button:hover {
+    background-color: #1ed760;
+    transform: scale(1.05);
+}
+
+/* Styles for selectors inside graph1 and graph2 */
+#selectors1, #selectors2, #selectors4  {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+#selectors1 select, #selectors2 select, #selectors4 select {
+    width: 10%; /* Diminution de la largeur */
+}
+
+/* Styles for dataSources buttons inside graph1 and graph2 */
+#dataSources1, #dataSources2, #dataSources4 {
+    /*display: flex;
+    justify-content: center;*/
+    margin-bottom: 10px;
+}
+
+#dataSources1 button, #dataSources2 button, #dataSources4 button  {
+    margin: 0 5px;
+}
