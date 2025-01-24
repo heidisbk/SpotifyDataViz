@@ -197,7 +197,6 @@ async function handleUserSelection() {
 
   // Recréer les graphiques avec les nouvelles données (API Spotify)
   const genreData = await fetchUserGenres(user.access_token);
-  // createTopTracksBarChart("#chart1", user.access_token);
   createGenreBubbleChart('#chart3', genreData);
 
     // AJOUT : si localData est dispo, on crée la heatmap
@@ -299,7 +298,7 @@ function createGenreBubbleChart(selector, data) {
 
   const nodes = data.map(d => ({
     ...d,
-    radius: Math.sqrt(d.value) * 10
+    radius: Math.sqrt(d.value) * 20
   }));
 
   const node = svg.selectAll('circle')
@@ -562,6 +561,13 @@ function createTopArtistsBarChartLocal(selector, localData) {
       .on("mouseout", () => {
         tooltip.style('opacity', 0);
       })
+      .on("click", function(event, d) {
+        // Stocker l'artiste sélectionné globalement
+        window.selectedArtist = d.artistName;
+        
+        // Appeler la fonction pour créer/mettre à jour le radar chart
+        createRadarChart("#radarChartContainer", d.artistName, localData);
+      })
       .transition()
       .duration(1000)
       .attr("width", d => x(d.totalMs) - margin.left);
@@ -618,56 +624,178 @@ function createTopArtistsBarChartLocal(selector, localData) {
     .style('font-size', '14px');
 }
 
-/* async function createTopTracksBarChart(selector, token) {
-    const response = await fetch('https://api.spotify.com/v1/me/top/tracks?limit=10', {
-        headers: { 'Authorization': `Bearer ${token}` }
+function getMonthlyListeningData(artistName, localData) {
+  // Initialiser un objet pour stocker la durée par mois
+  const monthlyData = {};
+
+  // Définir le format de la date
+  const parseTime = d3.timeParse("%Y-%m-%d %H:%M");
+  const formatMonth = d3.timeFormat('%Y-%m');
+
+  localData.forEach(d => {
+    if (d.artistName === artistName) {
+      const dateObj = parseTime(d.endTime);
+      if (dateObj) {
+        const monthStr = formatMonth(dateObj);
+        if (!monthlyData[monthStr]) {
+          monthlyData[monthStr] = 0;
+        }
+        monthlyData[monthStr] += d.msPlayed;
+      }
+    }
+  });
+
+  // Transformer l'objet en tableau et trier par date
+  const sortedMonthlyData = Object.entries(monthlyData)
+    .map(([month, duration]) => ({ month, duration }))
+    .sort((a, b) => new Date(a.month) - new Date(b.month));
+
+  return sortedMonthlyData;
+}
+
+function createRadarChart(selector, artistName, localData) {
+  // Extraire les données par mois pour l'artiste sélectionné
+  const data = getMonthlyListeningData(artistName, localData);
+
+  if (data.length === 0) {
+    alert(`Aucune donnée disponible pour l'artiste ${artistName}.`);
+    return;
+  }
+
+  // Définir les paramètres du radar chart
+  const margin = { top: 50, right: 80, bottom: 50, left: 80 };
+  const width = 500 - margin.left - margin.right;
+  const height = 500 - margin.top - margin.bottom;
+  const levels = 5; // Nombre de niveaux de cercles concentriques
+  const maxValue = d3.max(data, d => d.duration) || 1;
+
+  // Supprimer tout SVG précédent dans le conteneur
+  d3.select(selector).select("svg").remove();
+
+  // Créer le SVG
+  const svg = d3.select(selector)
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${(width / 2) + margin.left}, ${(height / 2) + margin.top})`);
+
+  const radius = Math.min(width / 2, height / 2);
+
+  // Calculer l'angle pour chaque axe (mois)
+  const angleSlice = (Math.PI * 2) / data.length;
+
+  // Définir l'échelle pour les valeurs
+  const rScale = d3.scaleLinear()
+    .range([0, radius])
+    .domain([0, maxValue]);
+
+  // Ajouter les niveaux de cercles
+  for (let level = 0; level < levels; level++) {
+    const r = radius / levels * (level + 1);
+    svg.append("circle")
+      .attr("r", r)
+      .attr("fill", "none")
+      .attr("stroke", "#CDCDCD")
+      .attr("stroke-width", "0.5px");
+    
+    // Ajouter des labels de niveau
+    svg.append("text")
+      .attr("y", -r)
+      .attr("dy", "-0.4em")
+      .attr("text-anchor", "middle")
+      .attr("font-size", "10px")
+      .text(d3.format(".1s")(rScale.invert(r)));
+  }
+
+  // Ajouter les axes pour chaque mois
+  const axisGrid = svg.append("g").attr("class", "axisWrapper");
+
+  axisGrid.selectAll(".axis")
+    .data(data)
+    .enter()
+    .append("line")
+    .attr("x1", 0)
+    .attr("y1", 0)
+    .attr("x2", (d, i) => rScale(maxValue * 1.1) * Math.cos(angleSlice * i - Math.PI / 2))
+    .attr("y2", (d, i) => rScale(maxValue * 1.1) * Math.sin(angleSlice * i - Math.PI / 2))
+    .attr("stroke", "grey")
+    .attr("stroke-width", "1px");
+
+  // Ajouter les labels des axes (mois)
+  axisGrid.selectAll(".axisLabel")
+    .data(data)
+    .enter().append("text")
+    .attr("class", "axisLabel")
+    .attr("x", (d, i) => rScale(maxValue * 1.25) * Math.cos(angleSlice * i - Math.PI / 2))
+    .attr("y", (d, i) => rScale(maxValue * 1.25) * Math.sin(angleSlice * i - Math.PI / 2))
+    .attr("text-anchor", "middle")
+    .attr("font-size", "11px")
+    .text(d => d.month);
+
+  // Préparer la ligne du radar chart
+  const radarLine = d3.lineRadial()
+    .radius(d => rScale(d.duration))
+    .angle((d, i) => i * angleSlice)
+    .curve(d3.curveLinearClosed);
+
+  // Ajouter la forme du radar chart
+  svg.append("path")
+    .datum(data)
+    .attr("d", radarLine)
+    .attr("fill", "rgba(29, 185, 84, 0.5)")
+    .attr("stroke", "#1DB954")
+    .attr("stroke-width", "2px");
+
+  // Ajouter des points sur les axes du radar chart
+  svg.selectAll(".radarCircle")
+    .data(data)
+    .enter()
+    .append("circle")
+    .attr("class", "radarCircle")
+    .attr("r", 4)
+    .attr("cx", (d, i) => rScale(d.duration) * Math.cos(angleSlice * i - Math.PI / 2))
+    .attr("cy", (d, i) => rScale(d.duration) * Math.sin(angleSlice * i - Math.PI / 2))
+    .attr("fill", "#1DB954")
+    .attr("stroke", "#fff")
+    .attr("stroke-width", "1px")
+    .on("mouseover", function(event, d) {
+      d3.select(this).attr("r", 6);
+      tooltipRadar.transition()
+        .duration(200)
+        .style("opacity", .9);
+      tooltipRadar.html(`${d.month}: ${d3.format(".2s")(d.duration / 60000)} min`)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mousemove", function(event) {
+      tooltipRadar
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", function() {
+      d3.select(this).attr("r", 4);
+      tooltipRadar.transition()
+        .duration(500)
+        .style("opacity", 0);
     });
-    const data = await response.json();
 
-    const tracks = data.items.map(track => ({
-        name: track.name,
-        popularity: track.popularity
-    }));
-
-    const width = 600;
-    const height = 400;
-    const margin = { top: 20, right: 30, bottom: 40, left: 40 };
-
-    const svg = d3.select(selector)
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-    const x = d3.scaleBand()
-        .domain(tracks.map(d => d.name))
-        .range([margin.left, width - margin.right])
-        .padding(0.1);
-
-    const y = d3.scaleLinear()
-        .domain([0, 100]) // Popularité max est 100
-        .nice()
-        .range([height - margin.bottom, margin.top]);
-
-    svg.append("g")
-        .attr("fill", "rgba(29, 185, 84, 0.2)")
-        .selectAll("rect")
-        .data(tracks)
-        .join("rect")
-        .attr("x", d => x(d.name))
-        .attr("y", d => y(d.popularity))
-        .attr("height", d => y(0) - y(d.popularity))
-        .attr("width", x.bandwidth());
-
-    svg.append("g")
-        .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x).tickFormat(d => d.length > 10 ? d.slice(0, 10) + '...' : d))
-        .attr("font-size", '12px');
-
-    svg.append("g")
-        .attr("transform", `translate(${margin.left},0)`)
-        .call(d3.axisLeft(y))
-        .attr("font-size", '12px');
-} */
+  // Tooltip pour le radar chart
+  const tooltipRadar = d3.select('body').append('div')
+    .attr('class', 'tooltip')
+    .style('position', 'absolute')
+    .style('text-align', 'center')
+    .style('width', '100px')
+    .style('height', 'auto')
+    .style('padding', '5px')
+    .style('font', '12px sans-serif')
+    .style('background', 'rgba(0,0,0,0.6)')
+    .style('color', '#fff')
+    .style('border', '0px')
+    .style('border-radius', '8px')
+    .style('pointer-events', 'none')
+    .style('opacity', 0);
+}
 
 /**
  * Crée un camembert (pie chart) dans le conteneur `selector` 
@@ -722,9 +850,6 @@ function createTopTracksPieChartLocal(selector, localData) {
     .attr('height', height)
     .append("g")
     .attr("transform", `translate(${width / 2}, ${height / 2})`);
-
-  // Échelle de couleurs (basique, 10 couleurs)
-  const color = d3.scaleOrdinal(d3.schemeCategory10);
 
   // Préparer le layout "pie"
   const pie = d3.pie()
@@ -788,8 +913,8 @@ function createTopTracksPieChartLocal(selector, localData) {
       // ENTRÉE
       enter => enter.append('path')
         .attr('d', arc)
-        .attr('fill', d => color(d.data.trackName)) // ex: un code couleur par track
-        .attr('stroke', '#fff')
+        .attr('fill', 'rgba(29, 185, 84, 0.2)')
+        .attr('stroke', '#1DB954')
         .attr('stroke-width', 1)
         .on('mouseover', (event, d) => {
           const { trackName, artistName, totalMs } = d.data;
@@ -995,15 +1120,20 @@ function createListeningHeatmap(selector, localData) {
 
 // Mapping des artistes à leurs pays d'origine (manuel)
 const artistCountryMap = {
-  "The Beatles": "United Kingdom",
+  "The Beatles": "England",
   "Taylor Swift": "USA",
-  "Ed Sheeran": "United Kingdom",
+  "Ed Sheeran": "England",
   "BTS": "South Korea",
   "Shakira": "Colombia",
   "Beyoncé": "USA",
-  "Adele": "United Kingdom",
+  "Adele": "England",
   "Drake": "Canada",
   "Bad Bunny": "Puerto Rico",
+  "Rauw Alejandro": "Puerto Rico",
+  "Myke Towers": "Puerto Rico",
+  "Anuel AA": "Puerto Rico",
+  "Sfera Ebbasta": "Italy",
+  "Muhammad Al Muqit": "Saudi Arabia",
   "Booba": "France",
   "SCH": "France",
   "Rounhaa": "France",
@@ -1016,12 +1146,14 @@ const artistCountryMap = {
   "Prince": "USA",
   "Jazzy Bazz": "France",
   "Mad Keys": "USA",
-  "The Smiths": "United Kingdom",
+  "The Smiths": "England",
   "JeanJass": "Belgium",
   "Billie Eilish": "USA",
-  "Queen": "United Kingdom",
+  "Queen": "England",
   "Alpha Wann": "France",
   "Tyler, The Creator": "USA",
+  "Rosalía": "Spain",
+  "Karol G": "Colombia",
   "Krisy": "Belgium",
   "Yamê": "France",
   "Ajna": "France",
@@ -1040,6 +1172,23 @@ const artistCountryMap = {
   "Future": "USA",
   "Lil Uzi Vert": "USA",
   "070 Shake": "USA",
+  "Central Cee": "England",
+  "Stormzy": "England",
+  "Headie One": "England",
+  "Skepta": "England",
+  "AJ Tracey": "England",
+  "Little Simz": "England",
+  "Jorja Smith": "England",
+  "Dua Lipa": "England",
+  "ElGrandeToto": "Morocco",
+  "Kader Tarhanine": "Algeria",
+  "Sidiki Diabaté": "Mali",
+  "CKay": "Nigeria",
+  "Burna Boy": "Nigeria",
+  "Rema": "Nigeria",
+  "Omah Lay": "Nigeria",
+  "Ayra Starr": "Nigeria",
+  "Wizkid": "Nigeria",
   // Ajoutez d'autres artistes ici
 };
 
@@ -1110,7 +1259,7 @@ async function createArtistOriginMap(selector, localData) {
   const maxCount = d3.max(Object.values(countryCounts)) || 1;
   const colorScale = d3.scaleSequential()
     .domain([0, maxCount])
-    .interpolator(d3.interpolateBlues);
+    .interpolator(d3.interpolateGreens);
 
   // Ajouter les pays au SVG
   svg.append("g")
